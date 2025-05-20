@@ -1,3 +1,6 @@
+"use client";
+
+import Link from "next/link";
 import {
   FaHandsHelping,
   FaChartLine,
@@ -28,9 +31,11 @@ export default function Home() {
           <p className="text-lg md:text-xl mb-8 text-white font-light leading-relaxed">
             Connecter les agriculteurs du Bénin pour une agriculture plus intelligente 🌱
           </p>
-          <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold transition duration-300 shadow-lg hover:scale-105 hover:shadow-xl">
-            Commencer maintenant
-          </button>
+          <Link href="/auth/register">
+            <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold transition duration-300 shadow-lg hover:scale-105 hover:shadow-xl">
+              Commencer maintenant
+            </button>
+          </Link>
         </div>
       </section>
 
@@ -93,9 +98,11 @@ export default function Home() {
         <p className="mb-8 text-lg">
           Inscrivez-vous gratuitement et faites partie du futur de l’agriculture au Bénin.
         </p>
-        <button className="bg-white text-green-700 hover:text-green-800 px-8 py-3 rounded-full font-semibold transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105">
-          S'inscrire maintenant
-        </button>
+        <Link href="/auth/login">
+          <button className="bg-white text-green-700 hover:text-green-800 px-8 py-3 rounded-full font-semibold transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105">
+            S'inscrire maintenant
+          </button>
+        </Link>
       </section>
     </main>
   );

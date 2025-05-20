@@ -31,7 +31,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           
-          {/* Logo avec effet chic */}
+          {/* Logo */}
           <Link
             href="/"
             className="text-2xl font-bold flex items-center gap-2 transition-transform duration-300 hover:scale-105"
@@ -42,23 +42,39 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Bouton thème stylisé avec react-icons */}
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label="Changer le thème"
-              className={`p-2 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110
-                ${theme === 'dark' 
-                  ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' 
-                  : 'bg-gray-800 text-yellow-300 hover:bg-gray-700'}`}
-            >
-              {theme === 'dark' ? (
-                <FiSun className="text-xl" />
-              ) : (
-                <FiMoon className="text-xl" />
-              )}
-            </button>
-          )}
+          {/* Boutons à droite */}
+          <div className="flex items-center gap-4">
+            {/* Bouton Se connecter */}
+            <Link href="/auth/login">
+              <button
+                className={`px-4 py-2 rounded-full font-medium transition duration-300 shadow 
+                  ${theme === 'dark' 
+                    ? 'bg-white text-gray-900 hover:bg-gray-100' 
+                    : 'bg-green-600 text-white hover:bg-green-700'}
+                `}
+              >
+                Se connecter
+              </button>
+            </Link>
+
+            {/* Bouton Thème */}
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                aria-label="Changer le thème"
+                className={`p-2 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110
+                  ${theme === 'dark' 
+                    ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' 
+                    : 'bg-gray-800 text-yellow-300 hover:bg-gray-700'}`}
+              >
+                {theme === 'dark' ? (
+                  <FiSun className="text-xl" />
+                ) : (
+                  <FiMoon className="text-xl" />
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </nav>
