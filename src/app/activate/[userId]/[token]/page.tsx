@@ -1,3 +1,4 @@
+
 import ActivateClient from "@/components/ActivateClient";
 
 export type ParamsType = Promise<{ userId: string; token: string }>;
