@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useState, useEffect } from 'react'
 import { User, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -16,6 +17,7 @@ const loginSchema = z.object({
 })
 
 type LoginFormInputs = z.infer<typeof loginSchema>
+
 
 export default function LoginForm() {
   const router = useRouter()
@@ -53,7 +55,7 @@ export default function LoginForm() {
     setIsLoading(true)
     
     try {
-      const res = await fetch('https://agrismart-jclm.onrender.com/api/auth/jwt/create/', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,6 +114,7 @@ export default function LoginForm() {
               <input
                 id="username"
                 type="text"
+
                 autoComplete="username"
                 className={`w-full pl-10 pr-4 py-2 border ${
                   errors.username ? 'border-red-500' : 'border-gray-300'
@@ -194,6 +197,19 @@ export default function LoginForm() {
               <p className="text-sm text-red-700 text-center">{errors.root.message}</p>
             </div>
           )}
+          <div className="text-center flex justify-center items-center gap-2 text-sm text-gray-600">
+            <p>Mot de passe oublié ?</p>
+            <Link href="/auth/password/reset" className='text-green-400 font-semibold hover:underline'>
+              Réinitialiser
+            </Link>
+          </div>
+          <div className="text-center flex justify-center items-center gap-2 text-sm text-gray-600">
+            <p>Vous n'avez pas de compte ?</p>
+            <Link href="/auth/register" className='text-green-400 font-semibold hover:underline'>
+              S'inscrire
+            </Link>
+          </div>
+
         </form>
 
         <div className="text-center text-sm text-gray-500">

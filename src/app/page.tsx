@@ -23,6 +23,7 @@ export default function Home() {
         <div className="relative z-10 px-6 text-center max-w-3xl animate-fade-in-up">
           <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-white leading-tight tracking-wide drop-shadow-xl">
             Bienvenue sur{" "}
+
             <span className="bg-gradient-to-r from-green-400 to-lime-400 bg-clip-text text-transparent">
               AgriSmart
             </span>
