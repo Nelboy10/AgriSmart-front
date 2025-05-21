@@ -1,11 +1,10 @@
 import ActivateClient from "./ActivateClient";
 
-interface ActivatePageProps {
-  params: { userId: string; token: string };
-}
+export type ParamsType = Promise<{ userId: string; token: string }>;
 
-export default function ActivatePage({ params }: ActivatePageProps) {
-  const { userId, token } = params;
-
+export default async function Page({ params }: { params: ParamsType }) {
+  const { userId, token } = await params;
   return <ActivateClient userId={userId} token={token} />;
 }
+
+export const dynamic = 'force-dynamic';
