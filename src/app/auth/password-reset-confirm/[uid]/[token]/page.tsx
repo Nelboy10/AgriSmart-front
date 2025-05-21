@@ -1,7 +1,9 @@
 import PasswordResetConfirmClient from "@/components/PasswordResetConfirmClient";
 
-export default function Page({ params }: { params: { uid: string; token: string } }) {
-  const { uid, token } = params;
+export type ParamsType = Promise<{ uid: string; token: string }>;
+
+export default async function Page({ params }: { params: ParamsType }) {
+  const { uid, token } = await params;
   return <PasswordResetConfirmClient uid={uid} token={token} />;
 }
 
