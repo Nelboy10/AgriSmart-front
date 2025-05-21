@@ -32,7 +32,7 @@ export default function LoginForm() {
       // Stocke les tokens
       sessionStorage.setItem('access', data.access)
       localStorage.setItem('refresh', data.refresh)
-      router.push('/dashboard')
+      router.push('/home')
     } else {
       setMessage(`❌ Erreur: ${data.detail || JSON.stringify(data)}`)
     }

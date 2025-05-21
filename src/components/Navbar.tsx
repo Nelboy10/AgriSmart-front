@@ -22,7 +22,7 @@ export default function Navbar() {
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 
-        ${isScrolled ? 'backdrop-blur-md shadow-lg' : 'backdrop-blur-sm'} 
+        ${isScrolled ? 'backdrop-blur-md shadow-lg' : ''} 
         ${theme === 'dark' 
           ? 'bg-gray-900/80 text-white' 
           : 'bg-green-50/80 text-green-900'} 
