@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Props {
-  userId: string; // c'est en fait le uid
+  userId: string;
   token: string;
 }
 
