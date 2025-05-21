@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 import { Mail, User, Lock } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterForm() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -15,7 +18,7 @@ export default function RegisterForm() {
     setLoading(true)
     setMessage('')
 
-    const res = await fetch('https://agrismart-jclm.onrender.com/api/auth/users/', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,10 +30,10 @@ export default function RegisterForm() {
     setLoading(false)
 
     if (res.status === 201) {
-      setMessage('✅ Inscription réussie !')
       setEmail('')
       setUsername('')
       setPassword('')
+      router.push('/auth/check-email')
     } else {
       setMessage(`❌ Erreur: ${JSON.stringify(data)}`)
     }
@@ -43,12 +46,12 @@ export default function RegisterForm() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="relative">
-            <label className="block text-sm font-semibold text-gray-600 mb-1">Email</label>
+            <label className="block  text-sm font-semibold text-gray-600 mb-1">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="email"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
+                className="w-full text-gray-800 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -62,7 +65,7 @@ export default function RegisterForm() {
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
+                className="w-full text-gray-800 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -76,7 +79,7 @@ export default function RegisterForm() {
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="password"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
+                className="w-full text-gray-800 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -91,6 +94,12 @@ export default function RegisterForm() {
           >
             {loading ? 'Chargement...' : "S'inscrire"}
           </button>
+          <div className="text-center flex justify-center items-center gap-2 text-sm text-gray-600">
+            <p>Vous avez déjà un compte ?</p>
+            <Link href="/auth/login" className='text-green-400 font-semibold hover:underline'>
+              Se connecter
+            </Link>
+          </div>
         </form>
 
         {message && (

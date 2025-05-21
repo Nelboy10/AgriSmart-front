@@ -24,12 +24,12 @@ export default function Home() {
         <div className="relative z-10 px-6 text-center max-w-4xl animate-fade-in-up">
           <h1 className="text-5xl md:text-6xl font-extrabold mb-6 text-white drop-shadow-xl leading-tight tracking-wide">
             Bienvenue sur{" "}
-            <span className="text-green-400 underline decoration-wavy underline-offset-4">
+            <span className="text-green-400">
               AgriSmart
             </span>
           </h1>
           <p className="text-lg md:text-xl mb-8 text-white font-light leading-relaxed">
-            Connecter les agriculteurs du Bénin pour une agriculture plus intelligente 🌱
+            La plateforme qui connecte les agriculteurs du Bénin pour une agriculture plus intelligente 🌱
           </p>
           <Link href="/auth/register">
             <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold transition duration-300 shadow-lg hover:scale-105 hover:shadow-xl">

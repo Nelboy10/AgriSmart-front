@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@tailwind components;
-@tailwind utilities;
 
 /* Pour transition dark/light */
 html {

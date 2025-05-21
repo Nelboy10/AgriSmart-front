@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { User, Lock } from 'lucide-react'
+import Link from 'next/link'
 
 export default function LoginForm() {
   const [username, setUsername] = useState('')
@@ -15,7 +16,7 @@ export default function LoginForm() {
     setMessage('')
 
     try {
-      const res = await fetch('https://agrismart-jclm.onrender.com/api/auth/jwt/create/', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +54,7 @@ export default function LoginForm() {
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
+                className="w-full text-gray-800 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -67,7 +68,7 @@ export default function LoginForm() {
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="password"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
+                className="w-full text-gray-800 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -82,6 +83,18 @@ export default function LoginForm() {
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
+          <div className="text-center flex justify-center items-center gap-2 text-sm text-gray-600">
+            <p>Mot de passe oublié ?</p>
+            <Link href="/auth/password/reset" className='text-green-400 font-semibold hover:underline'>
+              Réinitialiser
+            </Link>
+          </div>
+          <div className="text-center flex justify-center items-center gap-2 text-sm text-gray-600">
+            <p>Vous n'avez pas de compte ?</p>
+            <Link href="/auth/register" className='text-green-400 font-semibold hover:underline'>
+              S'inscrire
+            </Link>
+          </div>
         </form>
 
         {message && (
