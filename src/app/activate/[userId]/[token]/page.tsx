@@ -1,16 +1,13 @@
+'use client';
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-interface ActivatePageProps {
-  params: { userId: string; token: string };
-}
-
-export default function ActivatePage({ params }: ActivatePageProps) {
+export default function ActivatePage({ params }: { params: { userId: string; token: string } }) {
   const router = useRouter();
   const { userId, token } = params;
 
   useEffect(() => {
-    // Appel à ton API pour activer l'utilisateur
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/activate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -18,11 +15,9 @@ export default function ActivatePage({ params }: ActivatePageProps) {
     })
       .then(async (res) => {
         if (res.ok) {
-          // Activation réussie, redirige ou affiche un message
-          router.push("/login?activated=1");
+          router.push("/auth/login?activated=1");
         } else {
-          // Erreur d'activation
-          alert("Erreur lors de l'activation du compte.");
+          // Gérer l’erreur
         }
       });
   }, [userId, token, router]);
