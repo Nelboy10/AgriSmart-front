@@ -1,9 +1,7 @@
 import ActivateClient from "./ActivateClient";
 
-export type ParamsType = Promise<{ userId: string; token: string }>;
-
-export default async function Page({ params }: { params: ParamsType }) {
-  const { userId, token } = await params;
+export default function Page({ params }: { params: { userId: string; token: string } }) {
+  const { userId, token } = params;
   return <ActivateClient userId={userId} token={token} />;
 }
 
