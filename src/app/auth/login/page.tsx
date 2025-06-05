@@ -41,7 +41,7 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2e7d32] via-[#8d6e63] to-[#2e7d32] flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#2e7d32] via-[#8d6e63] to-[#2e7d32] flex items-center justify-center px-4 relative overflow-hidden pt-30 pb-20 overflow-x-hidden">
       
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">

@@ -1,30 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { useTheme } from 'next-themes';
+import { useState } from 'react';
 import { FiSun, FiMoon, FiMenu, FiX } from 'react-icons/fi';
 import { FaLeaf } from 'react-icons/fa';
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Pour éviter le warning hydration Next.js
+  React.useEffect(() => setMounted(true), []);
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 
-        ${isScrolled ? 'shadow-sm backdrop-blur-md' : ''} 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
         ${theme === 'dark' ? 'bg-gray-900/80 text-white' : 'bg-white/90 text-green-900'}
       `}
     >
@@ -34,9 +29,11 @@ export default function Navbar() {
           <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
             <FaLeaf className="text-white text-lg" />
           </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
-            AgriSmart
-          </span>
+          <Link href="/">
+            <span className="text-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
+              AgriSmart
+            </span>
+          </Link>
         </div>
 
         {/* Liens desktop */}
