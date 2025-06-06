@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
+import { useAuthStore } from '@/stores/auth-store'; // Importez le store
+
 
 interface ContentFormProps {
   contentType: 'text' | 'video';
@@ -10,18 +12,12 @@ interface ContentFormProps {
   onCancel: () => void;
 }
 
-interface ContentFormData {
-  title: string;
-  description: string;
-  type: 'text' | 'video';
-  category: string;
-  language: string;
-  content_text: string;
-  video_url: string;
-}
+
+
 
 export default function ContentForm({ contentType, onSubmit, onCancel }: ContentFormProps) {
-  const [formData, setFormData] = useState<ContentFormData>({
+  const { token, isAuthenticated } = useAuthStore(); // Récupérez le token et l'état d'authentification
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     type: contentType,
@@ -81,28 +77,29 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    
+    if (!isAuthenticated || !token) {
+      setError('Veuillez vous connecter pour publier du contenu');
+      return;
+    }
+
     setIsUploading(true);
 
-    const formDataToSend = new FormData();
-    
-    // Ajout des champs texte
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value) formDataToSend.append(key, value);
-    });
-
-    // Ajout des fichiers
-    if (thumbnail) {
-      formDataToSend.append('thumbnail', thumbnail);
-    }
-
-    if (contentType === 'video' && videoFile) {
-      formDataToSend.append('video_file', videoFile);
-    }
-
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Non authentifié');
+      const formDataToSend = new FormData();
+      
+      // Ajout des champs texte
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value) formDataToSend.append(key, value);
+      });
+
+      // Ajout des fichiers
+      if (thumbnail) {
+        formDataToSend.append('thumbnail', thumbnail);
+      }
+
+      if (contentType === 'video' && videoFile) {
+        formDataToSend.append('video_file', videoFile);
       }
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/content/`, {

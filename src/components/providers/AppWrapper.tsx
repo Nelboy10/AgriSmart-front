@@ -1,15 +1,24 @@
-// components/providers.tsx
-'use client';
+// components/AuthProvider.tsx
+'use client'
 
-import { ThemeProvider } from 'next-themes';
-import { useAuthInitialization } from '@/stores/auth-store';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/stores/auth-store';
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  const { isHydrated } = useAuthInitialization();
+export default function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { initializeAuth, refreshAuth, token } = useAuthStore();
 
-  if (!isHydrated) {
-    return null; // Ou un écran de chargement
-  }
+  useEffect(() => {
+    initializeAuth();
+    
+    // Vérifier l'authentification toutes les 5 minutes
+    const interval = setInterval(() => {
+      if (token) {
+        refreshAuth();
+      }
+    }, 5 * 60 * 1000);
 
-  return <ThemeProvider attribute="class">{children}</ThemeProvider>;
+    return () => clearInterval(interval);
+  }, [initializeAuth, refreshAuth, token]);
+
+  return <>{children}</>;
 }

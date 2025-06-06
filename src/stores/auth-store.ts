@@ -18,11 +18,11 @@ interface AuthState {
   // État
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isHydrated: boolean;
   error: string | null;
-  role: string | null;
   
   // Actions
   setUser: (user: User | null) => void;
@@ -30,6 +30,8 @@ interface AuthState {
   login: (credentials: { username: string; password: string }) => Promise<void>;
   register: (data: { username: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
+  refreshAuth: () => Promise<void>;
+  fetchUser: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   initializeAuth: () => Promise<void>;
@@ -41,11 +43,11 @@ export const useAuthStore = create<AuthState>()(
       // État initial
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
       isHydrated: false,
       error: null,
-      role: null,
 
       // Actions
       setUser: (user) => set({ user, isAuthenticated: !!user }),
@@ -53,61 +55,56 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (isLoading) => set({ isLoading }),
       setError: (error) => set({ error }),
 
-      // Dans votre auth-store.ts
-login: async ({ username, password }) => {
-  set({ isLoading: true, error: null });
-  try {
-    // 1. Obtenir le token JWT
-    const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+      login: async ({ username, password }) => {
+        set({ isLoading: true, error: null });
+        try {
+          // 1. Obtenir le token JWT
+          const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
 
-    if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.json();
-      throw new Error(errorData.detail || 'Identifiants incorrects');
-    }
+          if (!tokenResponse.ok) {
+            const errorData = await tokenResponse.json();
+            throw new Error(errorData.detail || 'Identifiants incorrects');
+          }
 
-    const { access: token, refresh } = await tokenResponse.json();
-    
-    // 2. Récupérer les infos utilisateur
-    const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
-    });
+          const { access: token, refresh } = await tokenResponse.json();
+          
+          // 2. Récupérer les infos utilisateur
+          const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json'
+            }
+          });
 
-    if (!userResponse.ok) {
-      throw new Error('Échec de la récupération des informations utilisateur');
-    }
+          if (!userResponse.ok) {
+            throw new Error('Échec de la récupération des informations utilisateur');
+          }
 
-    const user = await userResponse.json();
+          const user = await userResponse.json();
 
-    // 3. Mettre à jour l'état
-    set({
-      user,
-      token,
-      isAuthenticated: true,
-      isLoading: false,
-      error: null
-    });
+          // 3. Mettre à jour l'état
+          set({
+            user,
+            token,
+            refreshToken: refresh,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null
+          });
 
-    // Optionnel: Stocker le refresh token
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('refresh', refresh);
-    }
-
-    return user;
-  } catch (error) {
-    set({
-      error: error instanceof Error ? error.message : 'Échec de la connexion',
-      isLoading: false
-    });
-    throw error;
-   }
-  },
+          return user;
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Échec de la connexion',
+            isLoading: false
+          });
+          throw error;
+        }
+      },
 
       register: async ({ username, email, password }) => {
         set({ isLoading: true, error: null });
@@ -115,7 +112,7 @@ login: async ({ username, password }) => {
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password, })
+            body: JSON.stringify({ username, email, password })
           });
 
           if (!response.ok) {
@@ -140,17 +137,72 @@ login: async ({ username, password }) => {
         set({
           user: null,
           token: null,
+          refreshToken: null,
           isAuthenticated: false,
           error: null
         });
       },
 
+      refreshAuth: async () => {
+        const { refreshToken } = get();
+        if (!refreshToken) return;
+
+        set({ isLoading: true });
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/refresh/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh: refreshToken })
+          });
+
+          if (res.ok) {
+            const { access } = await res.json();
+            set({ token: access, isLoading: false });
+            await get().fetchUser();
+          } else {
+            get().logout();
+          }
+        } catch (error) {
+          get().logout();
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      fetchUser: async () => {
+        const { token } = get();
+        if (!token) return;
+
+        set({ isLoading: true });
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (res.ok) {
+            const user = await res.json();
+            set({ user, isAuthenticated: true });
+          } else {
+            await get().refreshAuth();
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
       initializeAuth: async () => {
-        const { token, user } = get();
-        set({
-          isHydrated: true,
-          isAuthenticated: !!token && !!user
-        });
+        const { token, refreshAuth, fetchUser } = get();
+        set({ isHydrated: true });
+
+        if (token) {
+          try {
+            await fetchUser();
+          } catch (error) {
+            await refreshAuth();
+          }
+        }
       }
     }),
     {
@@ -168,6 +220,7 @@ login: async ({ username, password }) => {
       partialize: (state) => ({ 
         user: state.user, 
         token: state.token,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated 
       }),
       skipHydration: true,
@@ -175,20 +228,31 @@ login: async ({ username, password }) => {
   )
 );
 
-// Hook pour l'initialisation côté client
+// Hook amélioré pour l'initialisation
 export const useAuthInitialization = () => {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const refreshAuth = useAuthStore((state) => state.refreshAuth);
   const isHydrated = useAuthStore((state) => state.isHydrated);
   
   React.useEffect(() => {
     if (!isHydrated) {
       initializeAuth();
     }
-  }, [initializeAuth, isHydrated]);
+
+    // Rafraîchir le token périodiquement (toutes les 15 minutes)
+    const interval = setInterval(() => {
+      if (isHydrated) {
+        refreshAuth();
+      }
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [initializeAuth, refreshAuth, isHydrated]);
   
   return {
     isHydrated,
     isAuthenticated: useAuthStore((state) => state.isAuthenticated),
-    isLoading: useAuthStore((state) => state.isLoading)
+    isLoading: useAuthStore((state) => state.isLoading),
+    user: useAuthStore((state) => state.user)
   };
 };
