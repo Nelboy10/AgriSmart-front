@@ -19,47 +19,50 @@ export default function RegisterForm() {
   const [focusedField, setFocusedField] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage('')
-
-    let body: any
-    let headers: Record<string, string> = {}
-
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+  
+    let formData = new FormData();
+    formData.append('email', email);
+    formData.append('username', username);
+    formData.append('password', password);
+    formData.append('role', role);
+    formData.append('localisation', localisation);
+    
+    // Ajoutez le justificatif uniquement s'il est présent
     if (role === 'expert' && justificatif) {
-      body = new FormData()
-      body.append('email', email)
-      body.append('username', username)
-      body.append('password', password)
-      body.append('role', role)
-      body.append('localisation', localisation)
-      body.append('justificatif', justificatif)
-    } else {
-      body = JSON.stringify({ email, username, password, role, localisation })
-      headers['Content-Type'] = 'application/json'
+      formData.append('justificatif', justificatif);
     }
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/register/`, {
-      method: 'POST',
-      headers,
-      body,
-    })
-
-    const data = await res.json()
-    setLoading(false)
-
-    if (res.status === 201) {
-      setEmail('')
-      setUsername('')
-      setPassword('')
-      setRole('')
-      setLocalisation('')
-      setJustificatif(null)
-      router.push('/auth/check-email')
-    } else {
-      setMessage(`❌ Erreur: ${JSON.stringify(data)}`)
+  
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/register/`, {
+        method: 'POST',
+        // Ne pas définir manuellement le Content-Type pour FormData
+        // Le navigateur définira automatiquement le bon Content-Type avec la limite
+        body: formData,
+      });
+  
+      const data = await res.json();
+  
+      if (res.status === 201) {
+        setEmail('');
+        setUsername('');
+        setPassword('');
+        setRole('');
+        setLocalisation('');
+        setJustificatif(null);
+        router.push('/auth/check-email');
+      } else {
+        setMessage(`❌ Erreur: ${data.detail || JSON.stringify(data)}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
+      setMessage('❌ Une erreur est survenue lors de l\'inscription');
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2e7d32] via-[#8d6e63] to-[#2e7d32] flex items-center justify-center px-4 relative overflow-hidden pt-30 pb-20 overflow-x-hidden">

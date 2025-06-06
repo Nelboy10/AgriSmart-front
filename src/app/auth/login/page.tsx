@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth-store'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -13,12 +14,24 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState('')
+  const { login } = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
-
+    
+    
+    try {
+      // Utilisez la méthode login du store plutôt que de faire la requête manuellement
+      await login({ username, password })
+      router.push('/home')
+    } catch (error) {
+      setMessage(`❌ Erreur: ${error instanceof Error ? error.message : 'Échec de la connexion'}`)
+    } finally {
+      setLoading(false)
+    }
+    
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
       method: 'POST',
       headers: {

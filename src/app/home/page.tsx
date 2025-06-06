@@ -8,18 +8,16 @@ import { Sprout, Users, Cloud, Lightbulb, Sparkles } from 'lucide-react'
 const WeatherWidget = dynamic(() => import('../weather/WeatherWidget'), { ssr: false })
 const CommunityFeed = dynamic(() => import('../community/CommunityFeed'), { ssr: false })
 const UserShowcase = dynamic(() => import('../users/UserShowcase'), { ssr: false })
-const AdviceList = dynamic(() => import('../advice/AdviceList'), { ssr: false })
 
 export default function HomePage() {
   const userLocation = undefined
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
-      {/* Hero Section avec effet de parallaxe */}
+      {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%224%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-        
         <div className="relative container mx-auto px-4 py-20">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -32,14 +30,12 @@ export default function HomePage() {
                 <Sprout className="w-12 h-12 text-white" />
               </div>
             </div>
-            
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Bienvenue sur{' '}
               <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
                 AgriSmart !
               </span>
             </h1>
-            
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -48,7 +44,6 @@ export default function HomePage() {
             >
               Plateforme connectée pour les agriculteurs du Bénin
             </motion.p>
-
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -65,7 +60,6 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
         </div>
-
         {/* Vagues décoratives */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -74,110 +68,73 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Contenu principal */}
-      <div className="container mx-auto px-4 py-12 -mt-8 relative z-10">
-        {/* Section météo + communauté */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-12">
-          {/* Météo */}
-          <div className="group">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 group-hover:scale-[1.02]">
-              <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl p-1 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse"></div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Cloud className="w-8 h-8 text-white animate-bounce" />
-                    <h2 className="text-xl font-bold text-white">Météo Locale</h2>
-                  </div>
-                  <Suspense fallback={
-                    <div className="bg-white/20 rounded-xl p-6 animate-pulse">
-                      <div className="flex items-center justify-center space-x-2">
-                        <Sparkles className="w-6 h-6 text-white animate-spin" />
-                        <span className="text-white font-medium">Chargement météo...</span>
-                      </div>
-                    </div>
-                  }>
-                    <WeatherWidget userLocation={userLocation} />
-                  </Suspense>
+      {/* Contenu principal en colonne */}
+      <div className="container mx-auto px-4 py-12 -mt-8 relative z-10 flex flex-col gap-10 max-w-3xl">
+        {/* Météo */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="group"
+        >
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 group-hover:scale-[1.02]">
+            <div className="flex items-center gap-3 mb-4">
+              <Cloud className="w-8 h-8 text-white animate-bounce" />
+              <h2 className="text-xl font-bold text-white">Météo Locale</h2>
+            </div>
+            <Suspense fallback={
+              <div className="bg-white/20 rounded-xl p-6 animate-pulse">
+                <div className="flex items-center justify-center space-x-2">
+                  <Sparkles className="w-6 h-6 text-white animate-spin" />
+                  <span className="text-white font-medium">Chargement météo...</span>
                 </div>
               </div>
-            </div>
+            }>
+              <WeatherWidget userLocation={userLocation} />
+            </Suspense>
           </div>
-          {/* Communauté */}
-          <div className="group">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 group-hover:scale-[1.02]">
-              <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-1 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse"></div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Users className="w-8 h-8 text-white animate-pulse" />
-                    <h2 className="text-xl font-bold text-white">Communauté</h2>
-                  </div>
-                  <Suspense fallback={
-                    <div className="bg-white/20 rounded-xl p-6 animate-pulse">
-                      <div className="flex items-center justify-center space-x-2">
-                        <Sparkles className="w-6 h-6 text-white animate-spin" />
-                        <span className="text-white font-medium">Chargement de la communauté...</span>
-                      </div>
-                    </div>
-                  }>
-                    <CommunityFeed />
-                  </Suspense>
+        </motion.div>
+
+        {/* Communauté / Posts */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="group"
+        >
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 group-hover:scale-[1.02]">
+            <div className="flex items-center gap-3 mb-4">
+              <Users className="w-8 h-8 text-white animate-pulse" />
+              <h2 className="text-xl font-bold text-white">Communauté</h2>
+            </div>
+            <Suspense fallback={
+              <div className="bg-white/20 rounded-xl p-6 animate-pulse">
+                <div className="flex items-center justify-center space-x-2">
+                  <Sparkles className="w-6 h-6 text-white animate-spin" />
+                  <span className="text-white font-medium">Chargement de la communauté...</span>
                 </div>
               </div>
-            </div>
+            }>
+              <CommunityFeed />
+            </Suspense>
           </div>
-        </div>
-        {/* Section utilisateurs + conseils */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Utilisateurs */}
-          <div className="group">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 group-hover:scale-[1.02]">
-              <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-1 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse"></div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Users className="w-8 h-8 text-white animate-bounce" />
-                    <h2 className="text-xl font-bold text-white">Top Utilisateurs</h2>
-                  </div>
-                  <Suspense fallback={
-                    <div className="bg-white/20 rounded-xl p-6 animate-pulse">
-                      <div className="flex items-center justify-center space-x-2">
-                        <Sparkles className="w-6 h-6 text-white animate-spin" />
-                        <span className="text-white font-medium">Chargement des utilisateurs...</span>
-                      </div>
-                    </div>
-                  }>
-                    <UserShowcase />
-                  </Suspense>
-                </div>
-              </div>
-            </div>
+        </motion.div>
+
+
+        {/* Membres actifs */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.6 }}
+          className="group"
+        >
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 group-hover:scale-[1.02]">
+            <UserShowcase />
           </div>
-          {/* Conseils agricoles */}
-          <div className="group">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-2 shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 group-hover:scale-[1.02]">
-              <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl p-1 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse"></div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Lightbulb className="w-8 h-8 text-white animate-pulse" />
-                    <h2 className="text-xl font-bold text-white">Conseils Agricoles</h2>
-                  </div>
-                  <Suspense fallback={
-                    <div className="bg-white/20 rounded-xl p-6 animate-pulse">
-                      <div className="flex items-center justify-center space-x-2">
-                        <Sparkles className="w-6 h-6 text-white animate-spin" />
-                        <span className="text-white font-medium">Chargement des conseils agricoles...</span>
-                      </div>
-                    </div>
-                  }>
-                    <AdviceList />
-                  </Suspense>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
