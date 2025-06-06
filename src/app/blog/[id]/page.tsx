@@ -1,18 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import VideoPlayer from '@/components/content/VideoPlayer';
 
-interface PageProps {
-    params: {
-      id: string;
-    };
-  }
+export default function ContentDetailPage() {
+  const params = useParams();
+  const id = params?.id as string;
 
-export default function ContentDetailPage({ params }: PageProps) {
-  const { id } = params;
   const [content, setContent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
