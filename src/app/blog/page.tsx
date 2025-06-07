@@ -268,6 +268,8 @@ export default function BlogPage() {
     <div className="container mx-auto px-4 py-8 pt-24 pb-24">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-green-800">Bonnes Pratiques Agricoles</h1>
+      </div>
+      <div className="flex justify-start mb-8">
         {(isAuthenticated && (user?.role === 'expert' || user?.role === 'admin')) || showCreateButton ? (
           <Button onClick={handleCreate} className="bg-green-600 hover:bg-green-700">
             Créer un contenu
