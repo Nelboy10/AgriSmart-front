@@ -227,19 +227,6 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-800 mb-1 dark:text-gray-50">Description *</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder={contentType === 'text' ? 'Contenu de votre article...' : 'Description de votre vidéo...'}
-            required
-          />
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-50 mb-1">Catégorie *</label>
@@ -282,14 +269,14 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
 
         {contentType === 'text' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contenu détaillé</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contenu</label>
             <textarea
-              name="content_text"
-              value={formData.content_text}
+              name="description"
+              value={formData.description}
               onChange={handleChange}
               rows={8}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900/50 rounded-md"
-              placeholder="Contenu complet de votre article..."
+              placeholder="Contenu détaillé de votre article..."
             />
           </div>
         )}

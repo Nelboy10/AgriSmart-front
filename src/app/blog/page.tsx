@@ -278,11 +278,11 @@ export default function BlogPage() {
       </div>
 
       {/* Barre de recherche */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6 dark:bg-gray-900/50 dark:border-gray-700">
         <form onSubmit={handleSearchSubmit} className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Search className="h-5 w-5 text-green-600" />
-            <h2 className="text-lg font-semibold text-gray-800">Rechercher</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Rechercher</h2>
           </div>
           
           <div className="flex gap-2">
@@ -330,10 +330,10 @@ export default function BlogPage() {
       </div>
 
       {/* Section des filtres */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6 dark:bg-gray-900/50 dark:border-gray-700">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-5 w-5 text-green-600" />
-          <h2 className="text-lg font-semibold text-gray-800">Filtres</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Filtres</h2>
           {hasActiveFilters && (
             <Button
               variant="ghost"
