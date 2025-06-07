@@ -33,12 +33,10 @@ export default function ContentCard({ content }: { content: ContentCardProps }) 
       <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition h-full flex flex-col dark:bg-gray-800 dark:border-gray-700">
         {isValidThumbnail ? (
           <div className="relative h-48">
-            <Image
+            <img
               src={content.thumbnail!}
               alt={content.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover w-full h-full"
               onError={(e) => {
                 // Fallback if the image fails to load
                 const target = e.target as HTMLImageElement;

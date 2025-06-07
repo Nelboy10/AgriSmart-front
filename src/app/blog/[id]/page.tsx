@@ -69,12 +69,10 @@ export default function ContentDetailPage() {
             </div>
             { content.type === 'text' ? (
             <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
-            <Image 
+            <img 
               src={content.thumbnail} 
               alt={content.title} 
-              fill
-              className="object-cover"
-              priority
+              className="object-cover w-full h-full"
             />
           </div>
          ) : (
