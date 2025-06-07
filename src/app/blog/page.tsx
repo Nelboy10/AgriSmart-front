@@ -9,7 +9,6 @@ import { useContentStore } from '@/stores/auth-store';
 export default function BlogPage() {
   const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [contents, setContents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
