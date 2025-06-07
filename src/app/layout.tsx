@@ -3,7 +3,7 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
-import AuthProvider from '@/components/providers/AppWrapper';
+import { AuthInitializer } from '@/components/providers/AppWrapper';
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -18,13 +18,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground min-h-screen flex flex-col`} suppressHydrationWarning={true}>
-        <AuthProvider>
+        <AuthInitializer />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Navbar />
             <main className="flex-grow">{children}</main>
             <Footer />
           </ThemeProvider>
-        </AuthProvider>
       </body>
     </html>
   )

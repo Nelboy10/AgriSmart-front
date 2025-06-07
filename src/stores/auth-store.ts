@@ -1,7 +1,7 @@
 // stores/auth-store.ts
 import { create } from 'zustand';
-import React from 'react';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import React from 'react';
 
 interface User {
   id: number;
@@ -14,27 +14,34 @@ interface User {
   email_verified?: boolean;
 }
 
+interface ContentStore {
+  shouldRefresh: boolean;
+  contents: any[];
+  setShouldRefresh: (value: boolean) => void;
+  addContent: (content: any) => void;
+  resetContents: () => void;
+}
+
 interface AuthState {
   // État
   user: User | null;
   token: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  isHydrated: boolean;
+  loading: boolean;
+  initialized: boolean;
   error: string | null;
   
+
   // Actions
-  setUser: (user: User | null) => void;
-  setToken: (token: string | null) => void;
   login: (credentials: { username: string; password: string }) => Promise<void>;
   register: (data: { username: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
-  refreshAuth: () => Promise<void>;
+  refreshAuth: () => Promise<boolean>;
   fetchUser: () => Promise<void>;
-  setLoading: (loading: boolean) => void;
+  initializeAuth: () => void;
+  setUser: (user: User) => void;
   setError: (error: string | null) => void;
-  initializeAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -45,18 +52,13 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       refreshToken: null,
       isAuthenticated: false,
-      isLoading: false,
-      isHydrated: false,
+      loading: false,
+      initialized: false,
       error: null,
 
       // Actions
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
-      setToken: (token) => set({ token }),
-      setLoading: (isLoading) => set({ isLoading }),
-      setError: (error) => set({ error }),
-
       login: async ({ username, password }) => {
-        set({ isLoading: true, error: null });
+        set({ loading: true, error: null });
         try {
           // 1. Obtenir le token JWT
           const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`, {
@@ -92,7 +94,8 @@ export const useAuthStore = create<AuthState>()(
             token,
             refreshToken: refresh,
             isAuthenticated: true,
-            isLoading: false,
+            loading: false,
+            initialized: true,
             error: null
           });
 
@@ -100,14 +103,15 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Échec de la connexion',
-            isLoading: false
+            loading: false,
+            initialized: true
           });
           throw error;
         }
       },
 
       register: async ({ username, email, password }) => {
-        set({ isLoading: true, error: null });
+        set({ loading: true, error: null });
         try {
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register/`, {
             method: 'POST',
@@ -123,11 +127,12 @@ export const useAuthStore = create<AuthState>()(
             throw new Error(errorMessage || "Échec de l'inscription");
           }
 
-          set({ isLoading: false, error: null });
+          set({ loading: false, initialized: true, error: null });
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : "Échec de l'inscription",
-            isLoading: false
+            loading: false,
+            initialized: true
           });
           throw error;
         }
@@ -139,15 +144,16 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           refreshToken: null,
           isAuthenticated: false,
+          loading: false,
+          initialized: true,
           error: null
         });
       },
 
       refreshAuth: async () => {
         const { refreshToken } = get();
-        if (!refreshToken) return;
+        if (!refreshToken) return false;
 
-        set({ isLoading: true });
         try {
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/refresh/`, {
             method: 'POST',
@@ -155,17 +161,14 @@ export const useAuthStore = create<AuthState>()(
             body: JSON.stringify({ refresh: refreshToken })
           });
 
-          if (res.ok) {
-            const { access } = await res.json();
-            set({ token: access, isLoading: false });
-            await get().fetchUser();
-          } else {
-            get().logout();
-          }
+          if (!res.ok) throw new Error('Refresh failed');
+
+          const { access } = await res.json();
+          set({ token: access });
+          return true;
         } catch (error) {
-          get().logout();
-        } finally {
-          set({ isLoading: false });
+          console.error('Refresh error:', error);
+          return false;
         }
       },
 
@@ -173,7 +176,6 @@ export const useAuthStore = create<AuthState>()(
         const { token } = get();
         if (!token) return;
 
-        set({ isLoading: true });
         try {
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/me/`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -183,27 +185,27 @@ export const useAuthStore = create<AuthState>()(
             const user = await res.json();
             set({ user, isAuthenticated: true });
           } else {
-            await get().refreshAuth();
+            throw new Error('Failed to fetch user');
           }
         } catch (error) {
           console.error('Error fetching user:', error);
-        } finally {
-          set({ isLoading: false });
+          throw error;
         }
       },
 
-      initializeAuth: async () => {
-        const { token, refreshAuth, fetchUser } = get();
-        set({ isHydrated: true });
+      initializeAuth: () => {
+        const { token, user } = get();
+        set({
+          isAuthenticated: !!token && !!user,
+          initialized: true,
+          loading: false,
+          error: null
+        });
+      },
 
-        if (token) {
-          try {
-            await fetchUser();
-          } catch (error) {
-            await refreshAuth();
-          }
-        }
-      }
+      setUser: (user: User) => set({ user }),
+
+      setError: (error: string | null) => set({ error }),
     }),
     {
       name: 'auth-storage',
@@ -218,41 +220,49 @@ export const useAuthStore = create<AuthState>()(
         };
       }),
       partialize: (state) => ({ 
-        user: state.user, 
         token: state.token,
         refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated 
+        user: state.user,
+        initialized: state.initialized,
+        isAuthenticated: state.isAuthenticated
       }),
-      skipHydration: true,
     }
   )
 );
 
-// Hook amélioré pour l'initialisation
+// Hook pour l'initialisation et le rafraîchissement automatique
 export const useAuthInitialization = () => {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
   const refreshAuth = useAuthStore((state) => state.refreshAuth);
-  const isHydrated = useAuthStore((state) => state.isHydrated);
-  
+  const fetchUser = useAuthStore((state) => state.fetchUser);
+  const token = useAuthStore((state) => state.token);
+  const initialized = useAuthStore((state) => state.initialized);
+
   React.useEffect(() => {
-    if (!isHydrated) {
+    if (!initialized) {
       initializeAuth();
     }
 
-    // Rafraîchir le token périodiquement (toutes les 15 minutes)
+    // Si on a un token mais que l'initialisation est faite, on vérifie l'utilisateur
+    if (initialized && token) {
+      fetchUser().catch(() => refreshAuth());
+    }
+
+    // Rafraîchir le token périodiquement (toutes les 10 minutes)
     const interval = setInterval(() => {
-      if (isHydrated) {
+      if (token) {
         refreshAuth();
       }
-    }, 15 * 60 * 1000);
+    }, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [initializeAuth, refreshAuth, isHydrated]);
-  
-  return {
-    isHydrated,
-    isAuthenticated: useAuthStore((state) => state.isAuthenticated),
-    isLoading: useAuthStore((state) => state.isLoading),
-    user: useAuthStore((state) => state.user)
-  };
+  }, [initializeAuth, refreshAuth, fetchUser, token, initialized]);
 };
+
+export const useContentStore = create<ContentStore>((set) => ({
+  shouldRefresh: false,
+  contents: [],
+  setShouldRefresh: (value) => set({ shouldRefresh: value }),
+  addContent: (content) => set((state) => ({ contents: [content, ...state.contents] })),
+  resetContents: () => set({ contents: [] }),
+}));

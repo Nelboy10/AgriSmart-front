@@ -1,10 +1,20 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/stores/auth-store'; // Importez le store
+import { useAuthStore } from '@/stores/auth-store';
 
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Language {
+  id: number;
+  name: string;
+  code: string;
+}
 
 interface ContentFormProps {
   contentType: 'text' | 'video';
@@ -12,11 +22,11 @@ interface ContentFormProps {
   onCancel: () => void;
 }
 
-
-
-
 export default function ContentForm({ contentType, onSubmit, onCancel }: ContentFormProps) {
-  const { token, isAuthenticated } = useAuthStore(); // Récupérez le token et l'état d'authentification
+  const { token, isAuthenticated } = useAuthStore();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -69,6 +79,47 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
     maxFiles: 1
   });
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/`);
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des catégories:', error);
+    }
+  };
+
+  const fetchLanguages = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/languages/`);
+      const data = await response.json();
+      setLanguages(data);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des langues:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchCategories(), fetchLanguages()]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (categories.length > 0 && formData.category === '') {
+      setFormData(prev => ({ ...prev, category: categories[0].id.toString() }));
+    }
+    if (languages.length > 0 && formData.language === '') {
+      setFormData(prev => ({ ...prev, language: languages[0].id.toString() }));
+    }
+  }, [categories, languages]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -83,64 +134,89 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
       return;
     }
 
+    // Validation côté client
+    if (!formData.title.trim()) {
+      setError('Le titre est obligatoire');
+      return;
+    }
+
+    if (!formData.category) {
+      setError('Veuillez sélectionner une catégorie');
+      return;
+    }
+
+    if (!formData.language) {
+      setError('Veuillez sélectionner une langue');
+      return;
+    }
+
+    if (contentType === 'video' && !formData.video_url && !videoFile) {
+      setError('Veuillez fournir une URL de vidéo ou télécharger un fichier vidéo');
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       const formDataToSend = new FormData();
       
-      // Ajout des champs texte
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) formDataToSend.append(key, value);
-      });
+      // Ajout des champs obligatoires
+      formDataToSend.append('title', formData.title.trim());
+      formDataToSend.append('description', formData.description.trim());
+      formDataToSend.append('type', formData.type);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('language', formData.language);
+      
+      // Contenu spécifique selon le type
+      if (formData.type === 'text') {
+        formDataToSend.append('content_text', formData.content_text || formData.description);
+      } else if (formData.type === 'video') {
+        if (formData.video_url) {
+          formDataToSend.append('video_url', formData.video_url);
+        }
+      }
 
       // Ajout des fichiers
       if (thumbnail) {
-        formDataToSend.append('thumbnail', thumbnail);
+        formDataToSend.append('thumbnail', thumbnail, thumbnail.name);
       }
 
       if (contentType === 'video' && videoFile) {
-        formDataToSend.append('video_file', videoFile);
+        formDataToSend.append('video_file', videoFile, videoFile.name);
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/content/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formDataToSend,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Erreur lors de la création du contenu');
+      // Debug: afficher le contenu de FormData
+      console.log('Données envoyées:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key, typeof value === 'object' ? value : value);
       }
 
-      const result = await response.json();
-      onSubmit(result);
+      // Passer les données au parent pour l'envoi
+      onSubmit(formDataToSend);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+      const message = err instanceof Error ? err.message : 'Erreur lors de l\'envoi';
       setError(message);
-      console.error('Erreur:', err);
+      console.error('Erreur détaillée:', err);
     } finally {
       setIsUploading(false);
     }
   };
-
+  
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md dark:bg-gray-900/50 dark:border-gray-700">
       <h2 className="text-xl font-semibold mb-4">
         {contentType === 'text' ? 'Nouvel Article' : 'Nouvelle Vidéo'}
       </h2>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md dark:bg-red-800 dark:text-red-300">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 dark:bg-gray-900/50 dark:border-gray-700">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-50">Titre *</label>
           <input
             type="text"
             name="title"
@@ -152,31 +228,35 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+          <label className="block text-sm font-medium text-gray-800 mb-1 dark:text-gray-50">Description *</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
-            rows={3}
+            rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            placeholder={contentType === 'text' ? 'Contenu de votre article...' : 'Description de votre vidéo...'}
             required
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-50 mb-1">Catégorie *</label>
             <select
               name="category"
-              value={formData.category}
+              value={formData.category || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900/50 rounded-md"
               required
+              disabled={loading}
             >
-              <option value="">Sélectionnez...</option>
-              <option value="1">Culture</option>
-              <option value="2">Élevage</option>
-              <option value="3">Gestion</option>
+              <option value="">Sélectionnez une catégorie</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -184,47 +264,53 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
             <label className="block text-sm font-medium text-gray-700 mb-1">Langue *</label>
             <select
               name="language"
-              value={formData.language}
+              value={formData.language || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900/50 rounded-md"
               required
+              disabled={loading}
             >
-              <option value="">Sélectionnez...</option>
-              <option value="1">Français</option>
-              <option value="2">Anglais</option>
+              <option value="">Sélectionnez une langue</option>
+              {languages.map((language) => (
+                <option key={language.id} value={language.id}>
+                  {language.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        {contentType === 'text' ? (
+        {contentType === 'text' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contenu *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contenu détaillé</label>
             <textarea
               name="content_text"
               value={formData.content_text}
               onChange={handleChange}
               rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              required
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900/50 rounded-md"
+              placeholder="Contenu complet de votre article..."
             />
           </div>
-        ) : (
+        )}
+
+        {contentType === 'video' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">URL de la vidéo (optionnel)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">URL de la vidéo</label>
               <input
                 type="url"
                 name="video_url"
                 value={formData.video_url}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900/50 rounded-md"
                 placeholder="https://example.com/video.mp4"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Ou télécharger une vidéo</label>
-              <div {...getVideoRootProps()} className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50">
+              <div {...getVideoRootProps()} className="border-2 border-dashed border-gray-300 dark:border-gray-700 dark:bg-gray-900/50 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50">
                 <input {...getVideoInputProps()} />
                 {videoFile ? (
                   <p className="text-green-600">{videoFile.name}</p>
@@ -241,10 +327,10 @@ export default function ContentForm({ contentType, onSubmit, onCancel }: Content
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Miniature {contentType === 'video' ? '(recommandé)' : ''}
           </label>
-          <div {...getThumbnailRootProps()} className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50">
+          <div {...getThumbnailRootProps()} className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 dark:bg-gray-900/50">
             <input {...getThumbnailInputProps()} />
             {thumbnail ? (
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center ">
                 <img 
                   src={URL.createObjectURL(thumbnail)} 
                   alt="Preview" 

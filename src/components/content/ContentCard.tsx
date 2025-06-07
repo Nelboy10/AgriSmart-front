@@ -29,8 +29,8 @@ export default function ContentCard({ content }: { content: ContentCardProps }) 
     (content.thumbnail.startsWith('http') || content.thumbnail.startsWith('/'));
 
   return (
-    <Link href={`/blog/${content.id}`} className="group">
-      <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition h-full flex flex-col">
+    <Link href={`/blog/${content.id}`} className="group dark:bg-gray-800 dark:border-gray-700">
+      <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition h-full flex flex-col dark:bg-gray-800 dark:border-gray-700">
         {isValidThumbnail ? (
           <div className="relative h-48">
             <Image

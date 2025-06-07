@@ -93,7 +93,7 @@ function ProfileMenu({ user, onClose }: { user: User; onClose?: () => void }) {
 
 // Composant de rendu conditionnel pour éviter l'hydratation mismatch
 function AuthSection() {
-  const { user, isAuthenticated, isLoading, isHydrated } = useAuthStore();
+  const { user, isAuthenticated, loading, initialized } = useAuthStore();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -116,14 +116,14 @@ function AuthSection() {
     : user?.username || '';
 
   // Pendant le chargement initial (avant hydratation)
-  if (!isHydrated) {
+  if (!initialized) {
     return (
       <div className="w-24 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
     );
   }
 
   // Pendant le chargement des données utilisateur
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="w-20 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
     );
@@ -166,7 +166,7 @@ function AuthSection() {
 
 // Composant AuthSection pour mobile
 function MobileAuthSection({ onMenuClose }: { onMenuClose: () => void }) {
-  const { user, isAuthenticated, isLoading, isHydrated } = useAuthStore();
+  const { user, isAuthenticated, loading, initialized } = useAuthStore();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -175,7 +175,7 @@ function MobileAuthSection({ onMenuClose }: { onMenuClose: () => void }) {
     : user?.username || '';
 
   // Pendant le chargement initial
-  if (!isHydrated || isLoading) {
+  if (!initialized || loading) {
     return (
       <div className="flex justify-center">
         <div className="w-20 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
@@ -222,7 +222,7 @@ function MobileAuthSection({ onMenuClose }: { onMenuClose: () => void }) {
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
-  const { initializeAuth, isHydrated } = useAuthStore();
+  const { initializeAuth, initialized } = useAuthStore();
   
   // États locaux
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -233,10 +233,10 @@ export default function Navbar() {
     setMounted(true);
     
     // Initialiser l'auth seulement si pas encore hydraté
-    if (!isHydrated) {
+    if (!initialized) {
       initializeAuth();
     }
-  }, [isHydrated, initializeAuth]);
+  }, [initialized, initializeAuth]);
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
