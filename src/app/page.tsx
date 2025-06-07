@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { JSX } from "react";
+
+
 import {
-  FaLeaf,
   FaUsers,
   FaChartLine,
   FaCloudSun,
@@ -12,10 +14,8 @@ import {
   FaStar,
   FaWhatsapp,
   FaArrowRight,
-  FaPlay,
   FaCheck,
 } from "react-icons/fa";
-import { JSX } from "react";
 
 export default function AgriSmart() {
   const stats = [
@@ -23,6 +23,7 @@ export default function AgriSmart() {
     { value: 95, suffix: "%", label: "Satisfaction client" },
     { value: 24, suffix: "h", label: "Support disponible" },
   ];
+
 
   const features = [
     {
@@ -66,7 +67,7 @@ export default function AgriSmart() {
   return (
     <div className="bg-white text-gray-800 overflow-x-hidden pt-20">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-[url('/image/home.jpeg')] bg-cover bg-center">
+      <section className="relative min-h-[90vh] pt-26 pb-26 flex items-center justify-center overflow-hidden bg-[url('/image/home.jpeg')] bg-cover bg-center">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <div className="relative z-10 text-center w-full max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-8 animate-fadeIn">
@@ -82,7 +83,7 @@ export default function AgriSmart() {
               Révolutionnez votre pratique agricole avec AgriSmart, la plateforme intelligente qui connecte les agriculteurs du Bénin à l'innovation technologique.
             </p>
           </div>
-
+          
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-12 animate-fadeIn delay-200">
             <Link href="/auth/register" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:scale-105 hover:shadow-xl flex items-center justify-center hover:from-green-600 hover:to-emerald-700">
@@ -90,10 +91,12 @@ export default function AgriSmart() {
                 <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
               </button>
             </Link>
-            <button className="w-full sm:w-auto bg-white/20 text-white px-8 py-3 rounded-full hover:bg-white/30 transition-all duration-300 flex items-center justify-center backdrop-blur-sm border border-white/20 hover:border-white/30">
-              <FaPlay className="mr-2" />
-              Voir la démo
-            </button>
+            <Link href="/home">
+              <button className="w-full sm:w-auto bg-white/20 text-white px-8 py-3 rounded-full hover:bg-white/30 transition-all duration-300 flex items-center justify-center backdrop-blur-sm border border-white/20 hover:border-white/30">
+                <FaArrowRight className="mr-2" />
+                  Accéder à mon feed
+              </button>
+            </Link> 
           </div>
 
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-6 max-w-2xl mx-auto animate-fadeInUp delay-300">
