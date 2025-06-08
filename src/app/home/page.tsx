@@ -14,10 +14,6 @@ const CommunityFeed = dynamic(() => import('../community/CommunityFeed'), {
   loading: () => <div className="h-64 bg-white/10 rounded-xl animate-pulse" />
 })
 
-const UserShowcase = dynamic(() => import('../users/UserShowcase'), {
-  ssr: false,
-  loading: () => <div className="h-64 bg-white/10 rounded-xl animate-pulse" />
-})
 
 export default function HomePage() {
   return (
@@ -88,22 +84,6 @@ export default function HomePage() {
           </div>
           <div className="p-6">
             <CommunityFeed />
-          </div>
-        </motion.div>
-
-        {/* Utilisateurs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-md overflow-hidden"
-        >
-          <div className="p-6 bg-emerald-600 text-white">
-            <h2 className="text-xl font-semibold">Agriculteurs Actifs</h2>
-          </div>
-          <div className="p-6">
-            <UserShowcase />
           </div>
         </motion.div>
       </div>

@@ -17,6 +17,7 @@ interface User {
   last_name?: string;
 }
 
+
 // Composant UserAvatar
 function UserAvatar({ user, size = 'md' }: { user: User | null; size?: 'sm' | 'md' | 'lg' }) {
   if (!user) return null;
@@ -72,7 +73,7 @@ function ProfileMenu({ user, onClose }: { user: User; onClose?: () => void }) {
       </div>
       
       <Link
-        href="/profile"
+        href={`/profile/${user.id}`}
         className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-700 transition"
         onClick={onClose}
       >
@@ -140,7 +141,7 @@ function AuthSection() {
           title="Profil"
         >
           <UserAvatar user={user} />
-          <span className="hidden lg:inline-block font-medium">{displayName}</span>
+          <span className="hidden lg:inline-block font-medium text-gray-900 dark:text-gray-100">{displayName}</span>
         </button>
 
         {profileMenuOpen && (
@@ -193,7 +194,7 @@ function MobileAuthSection({ onMenuClose }: { onMenuClose: () => void }) {
           title="Profil"
         >
           <UserAvatar user={user} />
-          <span className="font-medium">{displayName}</span>
+          <span className="font-medium text-gray-900 dark:text-gray-100">{displayName}</span>
         </button>
         {profileMenuOpen && (
           <ProfileMenu 
@@ -242,9 +243,8 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        theme === 'dark' ? 'bg-gray-900/80 text-white' : 'bg-white/90 text-green-900'
-      }`}>
+      {/* CORRECTION PRINCIPALE : Utilisation des classes Tailwind CSS au lieu de la logique conditionnelle */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
@@ -258,9 +258,15 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8 items-center">
-            <Link href="/about" className="hover:text-green-500 transition-colors duration-300">À propos</Link>
-            <Link href="/articles" className="hover:text-green-500 transition-colors duration-300">Articles</Link>
-            <Link href="/blog" className="hover:text-green-500 transition-colors duration-300">Blog Agricole</Link>
+            <Link href="/forum" className="text-gray-700 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-colors duration-300">
+              Forum
+            </Link>
+            <Link href="/articles" className="text-gray-700 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-colors duration-300">
+              Articles
+            </Link>
+            <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-colors duration-300">
+              Blog
+            </Link>
 
             {/* Section Auth/Profile */}
             <div className="flex items-center space-x-4">
@@ -271,13 +277,13 @@ export default function Navbar() {
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                   aria-label="Changer le thème"
-                  className={`p-2 rounded-full transition duration-300 shadow hover:shadow-lg hover:scale-110 ${
-                    theme === 'dark'
-                      ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-                      : 'bg-gray-800 text-yellow-300 hover:bg-gray-700'
-                  }`}
+                  className="p-2 rounded-full transition duration-300 shadow hover:shadow-lg hover:scale-110 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
-                  {theme === 'dark' ? <FiSun className="text-lg" /> : <FiMoon className="text-lg" />}
+                  {theme === 'dark' ? (
+                    <FiSun className="text-lg text-yellow-500" />
+                  ) : (
+                    <FiMoon className="text-lg text-blue-600" />
+                  )}
                 </button>
               )}
             </div>
@@ -288,7 +294,7 @@ export default function Navbar() {
             <button
               onClick={toggleMobileMenu}
               aria-label="Ouvrir le menu"
-              className="text-2xl focus:outline-none"
+              className="text-2xl focus:outline-none text-gray-700 dark:text-gray-300"
             >
               {mobileMenuOpen ? <FiX /> : <FiMenu />}
             </button>
@@ -297,15 +303,27 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden px-6 pb-4 space-y-4">
-            <Link href="/about" onClick={toggleMobileMenu} className="block hover:text-green-500 py-2">
-              À propos
+          <div className="md:hidden px-6 pb-4 space-y-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <Link 
+              href="/forum" 
+              onClick={toggleMobileMenu} 
+              className="block hover:text-green-500 dark:hover:text-green-400 py-2 text-gray-700 dark:text-gray-300"
+            >
+              Forum
             </Link>
-            <Link href="/articles" onClick={toggleMobileMenu} className="block hover:text-green-500 py-2">
+            <Link 
+              href="/articles" 
+              onClick={toggleMobileMenu} 
+              className="block hover:text-green-500 dark:hover:text-green-400 py-2 text-gray-700 dark:text-gray-300"
+            >
               Articles
             </Link>
-            <Link href="/blog" onClick={toggleMobileMenu} className="block hover:text-green-500 py-2">
-              Blog Agricole
+            <Link 
+              href="/blog" 
+              onClick={toggleMobileMenu} 
+              className="block hover:text-green-500 dark:hover:text-green-400 py-2 text-gray-700 dark:text-gray-300"
+            >
+              Blog 
             </Link>
 
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -313,19 +331,19 @@ export default function Navbar() {
 
               {/* Theme Toggle Mobile */}
               {mounted && (
-                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => {
                       setTheme(theme === 'dark' ? 'light' : 'dark');
                       toggleMobileMenu();
                     }}
-                    className={`w-full flex items-center justify-center gap-2 p-2 rounded-lg transition ${
-                      theme === 'dark'
-                        ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-                        : 'bg-gray-800 text-yellow-300 hover:bg-gray-700'
-                    }`}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg transition bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                   >
-                    {theme === 'dark' ? <FiSun /> : <FiMoon />}
+                    {theme === 'dark' ? (
+                      <FiSun className="text-yellow-500" />
+                    ) : (
+                      <FiMoon className="text-blue-600" />
+                    )}
                     <span>Basculer en mode {theme === 'dark' ? 'clair' : 'sombre'}</span>
                   </button>
                 </div>

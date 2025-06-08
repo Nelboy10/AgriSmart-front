@@ -29,8 +29,8 @@ export default function ContentCard({ content }: { content: ContentCardProps }) 
     (content.thumbnail.startsWith('http') || content.thumbnail.startsWith('/'));
 
   return (
-    <Link href={`/blog/${content.id}`} className="group dark:bg-gray-800 dark:border-gray-700">
-      <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition h-full flex flex-col dark:bg-gray-800 dark:border-gray-700">
+    <Link href={`/blog/${content.id}`} className="group dark:bg-gray-900/80 dark:border-gray-700  dark:text-gray-50">
+      <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition h-full flex flex-col dark:bg-gray-900/80 dark:border-gray-700 dark:hover:bg-gray-900/90 dark:hover:text-gray-100">
         {isValidThumbnail ? (
           <div className="relative h-48">
             <img
@@ -61,11 +61,11 @@ export default function ContentCard({ content }: { content: ContentCardProps }) 
             </span>
           </div>
           
-          <h3 className="text-lg font-semibold mb-2 group-hover:text-green-600 transition">
+          <h3 className="text-lg font-semibold mb-2 group-hover:text-green-600 transition dark:text-gray-100">
             {content.title}
           </h3>
           
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2 dark:text-gray-400">
             {content.description || content.content_text?.substring(0, 150)}...
           </p>
           

@@ -65,7 +65,7 @@ export default function AgriSmart() {
   ];
 
   return (
-    <div className="bg-white text-gray-800 overflow-x-hidden pt-20">
+    <div className="bg-white text-gray-800 overflow-x-hidden pt-20 dark:bg-gray-900/80 dark:text-gray-100">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] pt-26 pb-26 flex items-center justify-center overflow-hidden bg-[url('/image/home.jpeg')] bg-cover bg-center">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -84,7 +84,7 @@ export default function AgriSmart() {
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-12 animate-fadeIn delay-200">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-12 animate-fadeIn delay-200 ">
             <Link href="/auth/register" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 shadow-lg hover:scale-105 hover:shadow-xl flex items-center justify-center hover:from-green-600 hover:to-emerald-700">
                 Commencer gratuitement
@@ -108,17 +108,17 @@ export default function AgriSmart() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-16 px-4 sm:px-6 md:px-20 bg-white">
+      <section id="about" className="py-16 px-4 sm:px-6 md:px-20 bg-white dark:bg-gray-900/80 dark:text-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-center tracking-tight animate-fadeIn">
             À propos de{" "}
-            <span className="text-green-500 underline underline-offset-4 decoration-wavy">
+            <span className="text-green-500 underline underline-offset-4 decoration-wavy dark:text-green-400">
               AgriSmart
             </span>
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fadeInLeft">
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+              <p className="text-lg text-gray-600 mb-8 leading-relaxed dark:text-gray-50">
                 Dans un monde où l'agriculture évolue rapidement, AgriSmart vous donne les outils pour rester à la pointe. Notre plateforme combine intelligence artificielle, données météorologiques précises et communauté engagée pour transformer votre approche agricole.
               </p>
               <div className="space-y-6">
@@ -127,7 +127,7 @@ export default function AgriSmart() {
                 <FeatureItem text="Communauté active d'agriculteurs experts" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-6 animate-fadeInRight">
+            <div className="grid grid-cols-2 gap-6 animate-fadeInRight dark:bg-gray-900/80 dark:text-gray-50">
               <StatCard value="250%" color="bg-green-100 text-green-600" label="Augmentation des revenus" />
               <StatCard value="60%" color="bg-emerald-100 text-emerald-600" label="Réduction des pertes" />
               <StatCard value="40h" color="bg-green-100 text-green-600" label="Temps économisé/mois" />
@@ -138,12 +138,12 @@ export default function AgriSmart() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-16 px-4 sm:px-6 md:px-20 bg-gray-50">
+      <section id="features" className="py-16 px-4 sm:px-6 md:px-20 bg-gray-50 dark:bg-gray-900/80 dark:text-gray-100">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-center tracking-tight animate-fadeIn">
             Fonctionnalités principales
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 dark:bg-gray-900/80 dark:text-gray-100">
             {features.map((feature, index) => (
               <FeatureCard 
                 key={index} 
@@ -156,7 +156,7 @@ export default function AgriSmart() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-green-600 to-green-500 text-white text-center px-4 sm:px-6">
+      <section className="py-16 bg-gradient-to-r from-green-400 to-green-500 text-white text-center px-4 sm:px-6 dark:bg-gray-900/80 dark:text-gray-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6 tracking-tight animate-fadeIn">
             Prêt à révolutionner votre agriculture ?
@@ -178,7 +178,7 @@ export default function AgriSmart() {
             </button>
           </div>
 
-          <div className="mt-12 animate-fadeIn delay-300">
+          <div className="mt-12 animate-fadeIn delay-300 dark:text-gray-50">
             <p className="mb-4">✓ Inscription gratuite • ✓ Pas de frais cachés • ✓ Support 24/7</p>
             <div className="flex flex-col xs:flex-row justify-center items-center space-y-4 xs:space-y-0 xs:space-x-8 text-sm">
               <div className="flex items-center">
@@ -261,18 +261,18 @@ function StatItem({ value, suffix, label, delay = 0 }: { value: number; suffix: 
 
 function FeatureItem({ text }: { text: string }) {
   return (
-    <div className="flex items-center space-x-4 group">
+    <div className="flex items-center space-x-4 group dark:text-gray-50">
       <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center transition-all duration-300 group-hover:bg-green-600 group-hover:scale-110">
         <FaCheck className="text-white" />
       </div>
-      <span className="text-lg text-gray-700 transition-all duration-300 group-hover:text-gray-900">{text}</span>
+      <span className="text-lg text-gray-700 transition-all duration-300 group-hover:text-gray-900 dark:text-gray-50">{text}</span>
     </div>
   );
 }
 
 function StatCard({ value, color, label }: { value: string; color: string; label: string }) {
   return (
-    <div className={`p-6 rounded-2xl text-center ${color} hover:shadow-md transition-all duration-300 hover:-translate-y-1`}>
+    <div className={`p-6 rounded-2xl text-center ${color} hover:shadow-md transition-all duration-300 hover:-translate-y-1  dark:bg-gray-700/80 dark:border-gray-700 dark:text-gray-50`}>
       <div className="text-3xl font-bold mb-2">{value}</div>
       <div className="text-sm">{label}</div>
     </div>
@@ -292,7 +292,7 @@ function FeatureCard({
 }) {
   return (
     <div 
-      className="p-8 rounded-3xl shadow-md bg-white hover:shadow-xl hover:-translate-y-2 transition-all duration-300 text-center group border border-gray-100"
+      className="p-8 rounded-3xl shadow-md bg-white hover:shadow-xl hover:-translate-y-2 transition-all duration-300 text-center group border border-gray-100 dark:bg-gray-900/80 dark:border-gray-700 dark:text-gray-50"
       style={{
         animationDelay: `${delay}ms`,
         animationFillMode: 'both'
@@ -301,8 +301,8 @@ function FeatureCard({
       <div className="text-green-500 text-5xl mb-5 mx-auto transition-all duration-300 group-hover:scale-110 group-hover:text-green-600">
         {icon}
       </div>
-      <h3 className="text-xl font-semibold mb-2 transition-all duration-300 group-hover:text-green-600">{title}</h3>
-      <p className="text-gray-600 transition-all duration-300 group-hover:text-gray-800">{description}</p>
+      <h3 className="text-xl font-semibold mb-2 transition-all duration-300 group-hover:text-green-600 dark:text-gray-50">{title}</h3>
+      <p className="text-gray-600 transition-all duration-300 group-hover:text-gray-800 dark:text-gray-50">{description}</p>
     </div>
   );
 }

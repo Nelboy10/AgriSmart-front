@@ -266,15 +266,17 @@ export default function BlogPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 pt-24 pb-24">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-green-800">Bonnes Pratiques Agricoles</h1>
-      </div>
-      <div className="flex justify-start mb-8">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6 items-center justify-center mb-6 py-8'>
+        <div>
+          <h1 className="text-3xl font-bold text-green-800">Bonnes Pratiques Agricoles</h1>
+        </div>
+        <div className="mt-4 md:mt-0">
         {(isAuthenticated && (user?.role === 'expert' || user?.role === 'admin')) || showCreateButton ? (
           <Button onClick={handleCreate} className="bg-green-600 hover:bg-green-700">
             Créer un contenu
           </Button>
         ) : null}
+        </div>
       </div>
 
       {/* Barre de recherche */}
@@ -282,7 +284,7 @@ export default function BlogPage() {
         <form onSubmit={handleSearchSubmit} className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Search className="h-5 w-5 text-green-600" />
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Rechercher</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-50">Rechercher</h2>
           </div>
           
           <div className="flex gap-2">
@@ -330,16 +332,16 @@ export default function BlogPage() {
       </div>
 
       {/* Section des filtres */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6 dark:bg-gray-900/50 dark:border-gray-700">
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6 dark:bg-gray-900/80 dark:border-gray-700 dark:text-gray-50">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-5 w-5 text-green-600" />
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Filtres</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-50">Filtres</h2>
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="ml-auto text-gray-500 hover:text-gray-700"
+              className="ml-auto text-gray-500 hover:text-gray-700 dark:text-gray-50 dark:hover:text-gray-400"
             >
               <X className="h-4 w-4 mr-1" />
               Effacer tout
@@ -350,7 +352,7 @@ export default function BlogPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Filtre par catégorie */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Catégorie</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-50 ">Catégorie</label>
             <Select value={selectedCategory} onValueChange={handleCategoryChange} disabled={filtersLoading}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Toutes les catégories" />
@@ -368,7 +370,7 @@ export default function BlogPage() {
 
           {/* Filtre par type */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Type de contenu</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-50">Type de contenu</label>
             <Select value={selectedType} onValueChange={handleTypeChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Tous les types" />
@@ -386,7 +388,7 @@ export default function BlogPage() {
 
           {/* Filtre par langue */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Langue</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-50">Langue</label>
             <Select value={selectedLanguage} onValueChange={handleLanguageChange} disabled={filtersLoading}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Toutes les langues" />
@@ -406,7 +408,7 @@ export default function BlogPage() {
         {/* Affichage des filtres actifs */}
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
-            <span className="text-sm text-gray-600">Filtres actifs:</span>
+            <span className="text-sm text-gray-600 dark:text-gray-50">Filtres actifs:</span>
             {searchQuery && (
               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                 Recherche: "{searchQuery}"

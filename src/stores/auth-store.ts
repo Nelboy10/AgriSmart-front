@@ -11,7 +11,10 @@ interface User {
   first_name?: string;
   last_name?: string;
   role?: string;
-  email_verified?: boolean;
+  localisation?: string;
+  created_at?: string;
+  is_active?: boolean;
+  phone_number?: string;
 }
 
 interface ContentStore {

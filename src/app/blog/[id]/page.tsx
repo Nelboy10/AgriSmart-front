@@ -83,7 +83,7 @@ export default function ContentDetailPage() {
 
         {content.type === 'video' ? (
           <div className="mb-8">
-            <p className="text-lg text-gray-700 mb-6">{content.description}</p>
+            <p className="text-lg text-gray-700 mb-6 dark:text-gray-300">{content.description}</p>
             <VideoPlayer 
               url={content.video_url} 
               file={content.video_file} 
@@ -91,7 +91,7 @@ export default function ContentDetailPage() {
           </div>
         ) : (
           <div className="prose max-w-none mb-8">
-            <p className="text-lg text-gray-700 mb-6">{content.description}</p>
+            <p className="text-lg text-gray-700 mb-6 dark:text-gray-300">{content.description}</p>
           </div>
         )}
 
