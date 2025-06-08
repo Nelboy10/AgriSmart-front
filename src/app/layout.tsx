@@ -4,7 +4,7 @@ import { ThemeProvider } from "next-themes"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import { AuthInitializer } from '@/components/providers/AppWrapper';
-
+import { Toaster } from 'sonner'
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
@@ -21,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthInitializer />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Navbar />
+            <Toaster richColors position="top-right" />
             <main className="flex-grow">{children}</main>
             <Footer />
           </ThemeProvider>

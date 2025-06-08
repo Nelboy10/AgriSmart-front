@@ -6,31 +6,32 @@ import { Sprout, Cloud, Users } from 'lucide-react'
 
 const WeatherWidget = dynamic(() => import('../weather/WeatherWidget'), {
   ssr: false,
-  loading: () => <div className="h-64 bg-white/10 rounded-xl animate-pulse" />
+  loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Chargement météo...</div>
 })
 
-const CommunityFeed = dynamic(() => import('../community/CommunityFeed'), {
+const CommunityFeed = dynamic(() => import('@/components/CommunityFeed'), {
   ssr: false,
-  loading: () => <div className="h-64 bg-white/10 rounded-xl animate-pulse" />
+  loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Chargement de la communauté...</div>
 })
+
 
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Hero - Version ultra simple */}
+      {/* Hero */}
       <div className="relative bg-emerald-600 pt-32 pb-24">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="container mx-auto px-4 text-center"
         >
           <motion.div
-            animate={{ 
+            animate={{
               rotate: [0, 5, -5, 0],
               scale: [1, 1.05, 1]
             }}
-            transition={{ 
+            transition={{
               duration: 2,
               repeat: Infinity,
               repeatDelay: 3
@@ -39,7 +40,7 @@ export default function HomePage() {
           >
             <Sprout className="w-12 h-12 text-white" />
           </motion.div>
-          
+
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             AgriSmart
           </h1>
@@ -57,7 +58,7 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.5 }}
           className="bg-white rounded-2xl shadow-md overflow-hidden"
         >
@@ -74,7 +75,7 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="bg-white rounded-2xl shadow-md overflow-hidden"
         >
@@ -86,6 +87,9 @@ export default function HomePage() {
             <CommunityFeed />
           </div>
         </motion.div>
+
+        {/* Utilisateurs */}
+        
       </div>
     </div>
   )
