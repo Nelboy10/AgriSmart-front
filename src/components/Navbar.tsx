@@ -72,8 +72,8 @@ function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="h-9 w-9">
-        <div className="h-4 w-4 animate-pulse rounded bg-muted" />
+      <Button variant="ghost" size="icon" className="h-10 w-10 md:h-9 md:w-9">
+        <div className="h-5 w-5 md:h-4 md:w-4 animate-pulse rounded bg-muted" />
       </Button>
     );
   }
@@ -81,9 +81,9 @@ function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <Button variant="ghost" size="icon" className="h-10 w-10 md:h-9 md:w-9">
+          <Sun className="h-5 w-5 md:h-4 md:w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-5 w-5 md:h-4 md:w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Changer le thème</span>
         </Button>
       </DropdownMenuTrigger>
@@ -294,7 +294,7 @@ export default function Navbar() {
   if (!mounted) {
     return (
       <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center">
+        <div className="container mx-auto flex h-16 items-center px-4 sm:px-6">
           <div className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-600">
               <Leaf className="h-4 w-4 text-white" />
@@ -313,19 +313,19 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto max-w-5xl flex h-16 items-center">
+      <div className="container mx-auto max-w-5xl flex h-16 items-center px-4 sm:px-6">
         {/* Logo */}
         <div className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-600">
-            <Leaf className="h-4 w-4 text-white" />
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-600">
+            <Leaf className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
           </div>
-          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
+          <Link href="/" className="text-lg sm:text-xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
             AgriSmart
           </Link>
         </div>
 
         {/* Navigation desktop */}
-        <nav className="hidden md:flex items-center space-x-1 ml-8">
+        <nav className="hidden md:flex items-center space-x-1 ml-6 lg:ml-8">
           {navigationLinks.map((link) => (
             <Link
               key={link.href}
@@ -351,8 +351,8 @@ export default function Navbar() {
           {/* Mobile menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="md:hidden h-10 w-10">
+                <Menu className="h-15 w-15" />
                 <span className="sr-only">Ouvrir le menu</span>
               </Button>
             </SheetTrigger>

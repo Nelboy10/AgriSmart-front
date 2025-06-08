@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground min-h-screen flex flex-col`} suppressHydrationWarning={true}>
         <AuthInitializer />
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem  disableTransitionOnChange
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} disableTransitionOnChange={true}
           >
             <Navbar />
             <Toaster richColors position="top-right" />
