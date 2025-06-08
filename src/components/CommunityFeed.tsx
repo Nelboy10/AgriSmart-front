@@ -9,15 +9,17 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { toast } from 'sonner'
 
+interface Author {
+  id: number
+  username: string
+  photo?: string
+}
+
 interface Post {
   id: number
   content: string
   created_at: string
-  author: {
-    id: number
-    username: string
-    photo?: string
-  }
+  author: Author | string // Peut être un objet ou une string selon le serializer
   comments: Comment[]
 }
 
@@ -25,14 +27,11 @@ interface Comment {
   id: number
   content: string
   created_at: string
-  author: {
-    id: number
-    username: string
-    photo?: string
-  }
+  author: Author | string // Peut être un objet ou une string selon le serializer
+  post: number
 }
 
-// ✅ Utilitaire pour formater la date de façon sécurisée
+// ✅ Utilitaire pour formater la date
 function safeFormatDate(dateString?: string): string {
   if (!dateString || isNaN(Date.parse(dateString))) {
     return 'Date inconnue'
@@ -40,11 +39,34 @@ function safeFormatDate(dateString?: string): string {
   return format(new Date(dateString), 'PPpp', { locale: fr })
 }
 
+// ✅ Utilitaire pour extraire les infos auteur
+function getAuthorInfo(author: Author | string | undefined): { username: string; photo?: string } {
+  if (!author) {
+    return { username: 'Utilisateur' }
+  }
+  
+  // Si c'est un objet avec les détails
+  if (typeof author === 'object' && author.username) {
+    return {
+      username: author.username,
+      photo: author.photo
+    }
+  }
+  
+  // Si c'est une string (StringRelatedField de Django)
+  if (typeof author === 'string') {
+    return { username: author }
+  }
+  
+  return { username: 'Utilisateur' }
+}
+
 export default function CommunityFeed() {
   useAuthInitialization()
   const [posts, setPosts] = useState<Post[]>([])
   const [newPostContent, setNewPostContent] = useState('')
   const [loading, setLoading] = useState(true)
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false)
   const { token, isAuthenticated, user, logout } = useAuthStore()
 
   useEffect(() => {
@@ -55,7 +77,10 @@ export default function CommunityFeed() {
     try {
       setLoading(true)
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/`, {
-        headers: { Authorization: token ? `Bearer ${token}` : '' }
+        headers: { 
+          Authorization: token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
       })
       if (!res.ok) {
         if (res.status === 401) {
@@ -65,8 +90,17 @@ export default function CommunityFeed() {
         throw new Error('Erreur lors du chargement des posts')
       }
       const data = await res.json()
-      setPosts(data)
+      console.log('Posts data:', data) // Debug: vérifier la structure des données
+      
+      // S'assurer que chaque post a un tableau de commentaires
+      const postsWithComments = data.map((post: Post) => ({
+        ...post,
+        comments: Array.isArray(post.comments) ? post.comments : []
+      }))
+      
+      setPosts(postsWithComments)
     } catch (err: any) {
+      console.error('Erreur fetchPosts:', err) // Debug
       toast.error(err?.message ?? 'Erreur inconnue')
     } finally {
       setLoading(false)
@@ -75,14 +109,13 @@ export default function CommunityFeed() {
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newPostContent.trim()) return
-
-    if (!isAuthenticated || !token) {
-      toast.error('Vous devez être connecté pour publier')
+    if (!newPostContent.trim() || !isAuthenticated || !token) {
+      toast.error("Contenu invalide ou utilisateur non authentifié.")
       return
     }
 
     try {
+      setIsSubmittingPost(true)
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/`, {
         method: 'POST',
         headers: {
@@ -107,43 +140,63 @@ export default function CommunityFeed() {
       toast.success('Votre post a été publié.')
     } catch (err: any) {
       toast.error(err?.message ?? 'Erreur lors de la publication')
+    } finally {
+      setIsSubmittingPost(false)
     }
   }
 
   const handleCommentSubmit = async (postId: number, content: string) => {
-    if (!content.trim()) return
-
-    if (!isAuthenticated || !token) {
-      toast.error('Vous devez être connecté pour commenter')
+    if (!content.trim() || !isAuthenticated || !token) {
+      toast.error("Contenu vide ou utilisateur non authentifié.")
       return
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/`, {
+      // Option 1: Utiliser l'endpoint spécifique du post (recommandé)
+      
+
+      // Option 2: Si l'option 1 ne fonctionne pas, utiliser l'endpoint général
+       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/`, {
         method: 'POST',
-        headers: {
+         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ content, post: postId })
-      })
+       })
 
       if (!res.ok) {
         if (res.status === 401) {
           logout()
           throw new Error('Session expirée. Veuillez vous reconnecter.')
         }
-        throw new Error('Erreur lors de l’ajout du commentaire')
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.message || `Erreur HTTP ${res.status}`)
       }
 
       const newComment = await res.json()
+      console.log('Nouveau commentaire:', newComment) // Debug
+      
+      // Mise à jour optimiste avec les données de l'utilisateur connecté
+      const commentWithAuthor = {
+        ...newComment,
+        author: user || newComment.author // Utiliser les données de l'utilisateur connecté si disponibles
+      }
+      
       setPosts(posts.map(post =>
         post.id === postId
-          ? { ...post, comments: [newComment, ...post.comments] }
+          ? { 
+              ...post, 
+              comments: Array.isArray(post.comments) 
+                ? [commentWithAuthor, ...post.comments]
+                : [commentWithAuthor]
+            }
           : post
       ))
+      toast.success('Commentaire ajouté avec succès.')
     } catch (err: any) {
-      toast.error(err?.message ?? 'Erreur lors de l’ajout du commentaire')
+      console.error('Erreur lors de l\'ajout du commentaire:', err)
+      toast.error(err?.message ?? "Erreur lors de l'ajout du commentaire")
     }
   }
 
@@ -157,13 +210,14 @@ export default function CommunityFeed() {
         <form onSubmit={handlePostSubmit} className="space-y-3">
           <Textarea
             placeholder="Partagez quelque chose avec la communauté..."
+            aria-label="Zone de texte pour publier un post"
             value={newPostContent}
             onChange={(e) => setNewPostContent(e.target.value)}
             rows={3}
           />
           <div className="flex justify-end">
-            <Button type="submit" disabled={!newPostContent.trim()}>
-              Publier
+            <Button type="submit" disabled={!newPostContent.trim() || isSubmittingPost}>
+              {isSubmittingPost ? 'Publication...' : 'Publier'}
             </Button>
           </div>
         </form>
@@ -174,64 +228,74 @@ export default function CommunityFeed() {
           Aucun post pour le moment. Soyez le premier à partager !
         </div>
       ) : (
-        posts.map((post) => (
-          <div key={post.id} className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Avatar>
-                <AvatarImage src={post.author?.photo || ''} />
-                <AvatarFallback>
-                  {post.author?.username?.charAt(0)?.toUpperCase() ?? 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">{post.author?.username ?? 'Utilisateur inconnu'}</h3>
-                  <span className="text-xs text-gray-500">
-                    {safeFormatDate(post.created_at)}
-                  </span>
+        posts.map((post) => {
+          const authorInfo = getAuthorInfo(post.author)
+          
+          return (
+            <div key={post.id} className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Avatar>
+                  <AvatarImage src={authorInfo.photo || ''} />
+                  <AvatarFallback>
+                    {authorInfo.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">
+                      {authorInfo.username}
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      {safeFormatDate(post.created_at)}
+                    </span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-line">{post.content}</p>
                 </div>
-                <p className="mt-1 whitespace-pre-line">{post.content}</p>
+              </div>
+
+              <div className="mt-4 pl-11 space-y-4">
+                {post.comments && post.comments.length > 0 && (
+                  <div className="space-y-3">
+                    {post.comments.map((comment) => {
+                      const commentAuthorInfo = getAuthorInfo(comment.author)
+                      
+                      return (
+                        <div key={comment.id} className="flex items-start gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={commentAuthorInfo.photo || ''} />
+                            <AvatarFallback>
+                              {commentAuthorInfo.username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-medium">
+                                {commentAuthorInfo.username}
+                              </h4>
+                              <span className="text-xs text-gray-500">
+                                {safeFormatDate(comment.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-sm mt-1 whitespace-pre-line">
+                              {comment.content}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {isAuthenticated && (
+                  <CommentForm
+                    postId={post.id}
+                    onSubmit={handleCommentSubmit}
+                  />
+                )}
               </div>
             </div>
-
-            <div className="mt-4 pl-11 space-y-4">
-              {post.comments?.length > 0 && (
-                <div className="space-y-3">
-                  {post.comments.map((comment) => (
-                    <div key={`${comment.id}-${post.id}`} className="flex items-start gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={comment.author?.photo || ''} />
-                        <AvatarFallback>
-                          {comment.author?.username?.charAt(0)?.toUpperCase() ?? 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-medium">
-                            {comment.author?.username ?? 'Utilisateur'}
-                          </h4>
-                          <span className="text-xs text-gray-500">
-                            {safeFormatDate(comment.created_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm mt-1 whitespace-pre-line">
-                          {comment.content}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {isAuthenticated && (
-                <CommentForm
-                  postId={post.id}
-                  onSubmit={handleCommentSubmit}
-                />
-              )}
-            </div>
-          </div>
-        ))
+          )
+        })
       )}
     </div>
   )
@@ -245,12 +309,15 @@ function CommentForm({
   onSubmit: (postId: number, content: string) => void
 }) {
   const [content, setContent] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (content.trim()) {
-      onSubmit(postId, content)
+      setIsSubmitting(true)
+      await onSubmit(postId, content)
       setContent('')
+      setIsSubmitting(false)
     }
   }
 
@@ -260,11 +327,12 @@ function CommentForm({
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="Ajouter un commentaire..."
+        aria-label="Zone de commentaire"
         rows={1}
         className="flex-1"
       />
-      <Button type="submit" size="sm" disabled={!content.trim()}>
-        Envoyer
+      <Button type="submit" size="sm" disabled={!content.trim() || isSubmitting}>
+        {isSubmitting ? 'Envoi...' : 'Envoyer'}
       </Button>
     </form>
   )
