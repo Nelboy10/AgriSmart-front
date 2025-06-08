@@ -265,7 +265,7 @@ export default function BlogPage() {
   const showCreateButton = true; // À supprimer après les tests
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-24 pb-24">
+    <div className="container mx-auto px-4 py-8">
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6 items-center justify-center mb-6 py-8'>
         <div>
           <h1 className="text-3xl font-bold text-green-800">Bonnes Pratiques Agricoles</h1>

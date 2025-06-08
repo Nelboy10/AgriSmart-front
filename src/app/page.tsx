@@ -65,9 +65,9 @@ export default function AgriSmart() {
   ];
 
   return (
-    <div className="bg-white text-gray-800 overflow-x-hidden pt-20 dark:bg-gray-900/80 dark:text-gray-100">
+    <div className="bg-white text-gray-800 overflow-x-hidden dark:bg-gray-900/80 dark:text-gray-100">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] pt-26 pb-26 flex items-center justify-center overflow-hidden bg-[url('/image/home.jpeg')] bg-cover bg-center">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-[url('/image/home.jpeg')] bg-cover bg-center pt-30 pb-20">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <div className="relative z-10 text-center w-full max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-8 animate-fadeIn">

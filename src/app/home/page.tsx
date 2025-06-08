@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Hero */}
-      <div className="relative bg-emerald-600 pt-32 pb-24">
+      <div className="relative bg-emerald-600">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

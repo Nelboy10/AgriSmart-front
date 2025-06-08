@@ -1,6 +1,6 @@
 import "./globals.css"
 import { Inter } from "next/font/google"
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import { AuthInitializer } from '@/components/providers/AppWrapper';
@@ -19,7 +19,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground min-h-screen flex flex-col`} suppressHydrationWarning={true}>
         <AuthInitializer />
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem  disableTransitionOnChange
+          >
             <Navbar />
             <Toaster richColors position="top-right" />
             <main className="flex-grow">{children}</main>

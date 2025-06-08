@@ -2,11 +2,33 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { FiSun, FiMoon, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
-import { FaLeaf, FaUserCircle } from 'react-icons/fa';
+import { 
+  Sun, 
+  Moon, 
+  Menu, 
+  LogOut, 
+  User,
+  Leaf,
+  MessageSquare,
+  BookOpen,
+  Command,
+  Monitor,
+} from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
 interface User {
   id: number;
@@ -17,36 +39,103 @@ interface User {
   last_name?: string;
 }
 
+// Configuration des liens de navigation avec icônes
+const navigationLinks = [
+  { 
+    href: '/forum', 
+    label: 'Forum', 
+    icon: MessageSquare,
+    description: 'Discussions et échanges'
+  },
+  { 
+    href: '/catalogue', 
+    label: 'Catalogue', 
+    icon: Command,
+    description: 'Catalogue'
+  },
+  { 
+    href: '/blog', 
+    label: 'Blog Agricole', 
+    icon: BookOpen,
+    description: 'Blog Agricole'
+  },
+];
 
-// Composant UserAvatar
-function UserAvatar({ user, size = 'md' }: { user: User | null; size?: 'sm' | 'md' | 'lg' }) {
-  if (!user) return null;
+// Composant Toggle de Thème Amélioré
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  const sizeClasses = {
-    sm: 'w-8 h-8 text-sm',
-    md: 'w-10 h-10 text-lg',
-    lg: 'w-16 h-16 text-2xl'
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const baseClasses = `rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center font-bold text-green-700 dark:text-green-300 border-2 border-green-200 dark:border-green-700 hover:ring-2 hover:ring-green-300 transition`;
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className="h-9 w-9">
+        <div className="h-4 w-4 animate-pulse rounded bg-muted" />
+      </Button>
+    );
+  }
 
   return (
-    <div className={`${baseClasses} ${sizeClasses[size]}`}>
-      {user.photo ? (
-        <img
-          src={user.photo}
-          alt="Photo de profil"
-          className="w-full h-full rounded-full object-cover"
-        />
-      ) : (
-        <span>{user.username[0]?.toUpperCase()}</span>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-9 w-9">
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">Changer le thème</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          <Sun className="mr-2 h-4 w-4" />
+          Clair
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          <Moon className="mr-2 h-4 w-4" />
+          Sombre
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          <Monitor className="mr-2 h-4 w-4" />
+          Système
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-// Composant ProfileMenu
-function ProfileMenu({ user, onClose }: { user: User; onClose?: () => void }) {
+// Composant Avatar utilisateur
+function UserAvatar({ user, size = 'default' }: { user: User; size?: 'sm' | 'default' | 'lg' }) {
+  const displayName = user?.first_name 
+    ? `${user.first_name} ${user.last_name || ''}`.trim() 
+    : user?.username || '';
+
+  const initials = displayName
+    .split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  const sizeClasses = {
+    sm: 'h-6 w-6',
+    default: 'h-8 w-8',
+    lg: 'h-12 w-12'
+  };
+
+  return (
+    <Avatar className={sizeClasses[size]}>
+      <AvatarImage src={user.photo} alt={`Photo de ${displayName}`} />
+      <AvatarFallback className="bg-gradient-to-br from-green-400 to-emerald-600 text-white font-semibold">
+        {initials || user.username[0]?.toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
+// Menu utilisateur desktop
+function UserMenu({ user }: { user: User }) {
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
   
@@ -56,313 +145,275 @@ function ProfileMenu({ user, onClose }: { user: User; onClose?: () => void }) {
 
   const handleLogout = () => {
     logout();
-    onClose?.();
     router.push('/auth/login');
   };
 
   return (
-    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50 animate-fade-in">
-      <div className="px-4 py-3 text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
-        <div className="text-center">
-          <div className="mb-2 flex justify-center">
-            <UserAvatar user={user} size="lg" />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-auto p-1 rounded-full hover:bg-accent">
+          <div className="flex items-center space-x-2">
+            <UserAvatar user={user} />
+            <span className="hidden lg:inline-block text-sm font-medium">
+              {displayName}
+            </span>
           </div>
-          <h3 className="font-semibold text-lg">{displayName}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-        </div>
-      </div>
-      
-      <Link
-        href={`/profile/${user.id}`}
-        className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-700 transition"
-        onClick={onClose}
-      >
-        <FaUserCircle className="mr-2 text-green-600 dark:text-green-400" />
-        Mon profil
-      </Link>
-      
-      <button
-        onClick={handleLogout}
-        className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-      >
-        <FiLogOut className="mr-2" />
-        Déconnexion
-      </button>
-    </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex items-center space-x-3 p-2">
+            <UserAvatar user={user} size="lg" />
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{displayName}</p>
+              <p className="text-xs leading-none text-muted-foreground truncate">
+                {user.email}
+              </p>
+            </div>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href={`/profile/${user.id}`} className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>Mon profil</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Déconnexion</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-// Composant de rendu conditionnel pour éviter l'hydratation mismatch
+// Section authentification
 function AuthSection() {
   const { user, isAuthenticated, loading, initialized } = useAuthStore();
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const profileMenuRef = useRef<HTMLDivElement>(null);
-
-  // Gestion du clic à l'extérieur
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
-        setProfileMenuOpen(false);
-      }
-    }
-
-    if (profileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [profileMenuOpen]);
-
-  const displayName = user?.first_name 
-    ? `${user.first_name} ${user.last_name || ''}`.trim() 
-    : user?.username || '';
-
-  // Pendant le chargement initial (avant hydratation)
-  if (!initialized) {
-    return (
-      <div className="w-24 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-    );
-  }
-
-  // Pendant le chargement des données utilisateur
-  if (loading) {
-    return (
-      <div className="w-20 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-    );
-  }
-
-  // Utilisateur connecté
-  if (isAuthenticated && user) {
-    return (
-      <div className="relative" ref={profileMenuRef}>
-        <button
-          onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-          className="flex items-center space-x-2 focus:outline-none p-1 rounded-full transition hover:bg-gray-100 dark:hover:bg-gray-800"
-          aria-label="Menu utilisateur"
-          title="Profil"
-        >
-          <UserAvatar user={user} />
-          <span className="hidden lg:inline-block font-medium text-gray-900 dark:text-gray-100">{displayName}</span>
-        </button>
-
-        {profileMenuOpen && (
-          <ProfileMenu 
-            user={user} 
-            onClose={() => setProfileMenuOpen(false)} 
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Utilisateur non connecté
-  return (
-    <Link
-      href="/auth/login"
-      className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 rounded-full text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg text-sm font-medium"
-    >
-      Se connecter
-    </Link>
-  );
-}
-
-// Composant AuthSection pour mobile
-function MobileAuthSection({ onMenuClose }: { onMenuClose: () => void }) {
-  const { user, isAuthenticated, loading, initialized } = useAuthStore();
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const profileMenuRef = useRef<HTMLDivElement>(null);
-
-  const displayName = user?.first_name 
-    ? `${user.first_name} ${user.last_name || ''}`.trim() 
-    : user?.username || '';
 
   // Pendant le chargement initial
   if (!initialized || loading) {
     return (
-      <div className="flex justify-center">
-        <div className="w-20 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-      </div>
+      <div className="h-8 w-20 animate-pulse rounded-full bg-muted"></div>
     );
   }
 
   // Utilisateur connecté
   if (isAuthenticated && user) {
-    return (
-      <div className="flex items-center justify-center mb-4" ref={profileMenuRef}>
-        <button
-          onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-          className="flex items-center space-x-2 focus:outline-none p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-          title="Profil"
-        >
-          <UserAvatar user={user} />
-          <span className="font-medium text-gray-900 dark:text-gray-100">{displayName}</span>
-        </button>
-        {profileMenuOpen && (
-          <ProfileMenu 
-            user={user} 
-            onClose={() => {
-              setProfileMenuOpen(false);
-              onMenuClose();
-            }} 
-          />
-        )}
-      </div>
-    );
+    return <UserMenu user={user} />;
   }
 
   // Utilisateur non connecté
   return (
-    <Link
-      href="/auth/login"
-      onClick={onMenuClose}
-      className="block w-full text-center bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 rounded-full text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg text-sm font-medium"
-    >
-      Se connecter
-    </Link>
+    <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg">
+      <Link href="/auth/login">Se connecter</Link>
+    </Button>
   );
 }
 
-export default function Navbar() {
-  const { theme, setTheme } = useTheme();
-  const { initializeAuth, initialized } = useAuthStore();
-  
-  // États locaux
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+// Section Auth pour mobile dans le drawer
+function MobileAuthSection({ user, isAuthenticated, onClose }: { 
+  user: User | null; 
+  isAuthenticated: boolean; 
+  onClose: () => void; 
+}) {
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
 
-  // Initialisation côté client uniquement
+  const displayName = user?.first_name 
+    ? `${user.first_name} ${user.last_name || ''}`.trim() 
+    : user?.username || '';
+
+  const handleLogout = () => {
+    logout();
+    onClose();
+    router.push('/auth/login');
+  };
+
+  if (isAuthenticated && user) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50">
+          <UserAvatar user={user} size="lg" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm truncate">{displayName}</p>
+            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Link
+            href={`/profile/${user.id}`}
+            onClick={onClose}
+            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            <User className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium">Mon profil</span>
+          </Link>
+          
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-red-600 w-full text-left"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="font-medium">Déconnexion</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Button 
+      asChild 
+      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+      onClick={onClose}
+    >
+      <Link href="/auth/login">Se connecter</Link>
+    </Button>
+  );
+}
+
+// Composant principal Navbar
+export default function Navbar() {
+  const { user, isAuthenticated, initializeAuth, initialized } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Initialisation côté client
   useEffect(() => {
     setMounted(true);
-    
-    // Initialiser l'auth seulement si pas encore hydraté
     if (!initialized) {
       initializeAuth();
     }
   }, [initialized, initializeAuth]);
 
-  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
-
-  return (
-    <>
-      {/* CORRECTION PRINCIPALE : Utilisation des classes Tailwind CSS au lieu de la logique conditionnelle */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-white backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          {/* Logo */}
+  // Éviter les erreurs d'hydratation
+  if (!mounted) {
+    return (
+      <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
-              <FaLeaf className="text-white text-lg" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-600">
+              <Leaf className="h-4 w-4 text-white" />
             </div>
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
               AgriSmart
-            </Link>
+            </span>
           </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-8 items-center">
-            <Link href="/forum" className="text-gray-700 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-colors duration-300">
-              Forum
-            </Link>
-            <Link href="/articles" className="text-gray-700 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-colors duration-300">
-              Articles
-            </Link>
-            <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-colors duration-300">
-              Blog
-            </Link>
-
-            {/* Section Auth/Profile */}
-            <div className="flex items-center space-x-4">
-              <AuthSection />
-
-              {/* Theme Toggle */}
-              {mounted && (
-                <button
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  aria-label="Changer le thème"
-                  className="p-2 rounded-full transition duration-300 shadow hover:shadow-lg hover:scale-110 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                >
-                  {theme === 'dark' ? (
-                    <FiSun className="text-lg text-yellow-500" />
-                  ) : (
-                    <FiMoon className="text-lg text-blue-600" />
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              onClick={toggleMobileMenu}
-              aria-label="Ouvrir le menu"
-              className="text-2xl focus:outline-none text-gray-700 dark:text-gray-300"
-            >
-              {mobileMenuOpen ? <FiX /> : <FiMenu />}
-            </button>
+          <div className="ml-auto">
+            <div className="h-8 w-20 animate-pulse rounded-full bg-muted"></div>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden px-6 pb-4 space-y-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-            <Link 
-              href="/forum" 
-              onClick={toggleMobileMenu} 
-              className="block hover:text-green-500 dark:hover:text-green-400 py-2 text-gray-700 dark:text-gray-300"
-            >
-              Forum
-            </Link>
-            <Link 
-              href="/articles" 
-              onClick={toggleMobileMenu} 
-              className="block hover:text-green-500 dark:hover:text-green-400 py-2 text-gray-700 dark:text-gray-300"
-            >
-              Articles
-            </Link>
-            <Link 
-              href="/blog" 
-              onClick={toggleMobileMenu} 
-              className="block hover:text-green-500 dark:hover:text-green-400 py-2 text-gray-700 dark:text-gray-300"
-            >
-              Blog 
-            </Link>
-
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <MobileAuthSection onMenuClose={() => setMobileMenuOpen(false)} />
-
-              {/* Theme Toggle Mobile */}
-              {mounted && (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <button
-                    onClick={() => {
-                      setTheme(theme === 'dark' ? 'light' : 'dark');
-                      toggleMobileMenu();
-                    }}
-                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg transition bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                  >
-                    {theme === 'dark' ? (
-                      <FiSun className="text-yellow-500" />
-                    ) : (
-                      <FiMoon className="text-blue-600" />
-                    )}
-                    <span>Basculer en mode {theme === 'dark' ? 'clair' : 'sombre'}</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </nav>
+    );
+  }
 
-      {/* Styles */}
-      <style jsx global>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.18s cubic-bezier(.4,0,.2,1);
-        }
-      `}</style>
-    </>
+  return (
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto max-w-5xl flex h-16 items-center">
+        {/* Logo */}
+        <div className="flex items-center space-x-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-emerald-600">
+            <Leaf className="h-4 w-4 text-white" />
+          </div>
+          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
+            AgriSmart
+          </Link>
+        </div>
+
+        {/* Navigation desktop */}
+        <nav className="hidden md:flex items-center space-x-1 ml-8">
+          {navigationLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <link.icon className="h-4 w-4" />
+              <span>{link.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        {/* Actions à droite */}
+        <div className="ml-auto flex items-center space-x-2">
+          {/* Auth section desktop */}
+          <div className="hidden md:flex">
+            <AuthSection />
+          </div>
+          
+          {/* Theme toggle avec menu dropdown */}
+          <ThemeToggle />
+
+          {/* Mobile menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Ouvrir le menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+              <SheetHeader>
+                <SheetTitle className="flex items-center space-x-2 text-left">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-green-400 to-emerald-600">
+                    <Leaf className="h-3 w-3 text-white" />
+                  </div>
+                  <span className="bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
+                    AgriSmart
+                  </span>
+                </SheetTitle>
+              </SheetHeader>
+              
+              <div className="mt-8 space-y-6">
+                {/* Navigation mobile */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-muted-foreground px-3">Navigation</h3>
+                  {navigationLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <link.icon className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="font-medium">{link.label}</p>
+                        <p className="text-xs text-muted-foreground">{link.description}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                <Separator />
+
+                {/* Section Auth mobile */}
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Compte</h3>
+                  <MobileAuthSection 
+                    user={user} 
+                    isAuthenticated={isAuthenticated} 
+                    onClose={() => setMobileMenuOpen(false)} 
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Section Thème mobile */}
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Apparence</h3>
+                  <div className="px-3">
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+    </nav>
   );
 }
