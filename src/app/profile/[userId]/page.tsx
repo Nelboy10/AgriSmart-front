@@ -20,7 +20,7 @@ import {
 import axios from 'axios';
 
 const ProfilePage = () => {
-  const { user, token } = useAuthStore();
+  const { user, token, setUser } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   
@@ -37,14 +37,33 @@ const ProfilePage = () => {
     email: '',
     bio: '',
     localisation: '',
-    phone_number: ''
+    phone_number: '',
+    username: ''
   });
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSaving, setFormSaving] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  // Fonction pour construire l'URL complète de l'image
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '';
+    
+    // Si l'URL est déjà complète, la retourner telle quelle
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Sinon, construire l'URL complète
+    return `${apiUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
+        setLoading(true);
         let profileRes;
         
         if (isCurrentUser) {
@@ -57,17 +76,36 @@ const ProfilePage = () => {
           });
         }
         
-        setUserProfile(profileRes.data);
+        const profileData = profileRes.data;
+        setUserProfile(profileData);
+        
+        // Mettre à jour le formulaire avec les données récupérées
         setEditForm({
-          first_name: profileRes.data.first_name || '',
-          last_name: profileRes.data.last_name || '',
-          email: profileRes.data.email || '',
-          bio: profileRes.data.bio || '',
-          localisation: profileRes.data.localisation || '',
-          phone_number: profileRes.data.phone_number || ''
+          first_name: profileData.first_name || '',
+          last_name: profileData.last_name || '',
+          email: profileData.email || '',
+          bio: profileData.bio || '',
+          localisation: profileData.localisation || '',
+          phone_number: profileData.phone_number || '',
+          username: profileData.username || ''
         });
+        
+        // Gérer l'aperçu de la photo correctement
+        if (profileData.photo) {
+          const imageUrl = getImageUrl(profileData.photo);
+          setPhotoPreview(imageUrl);
+        } else {
+          setPhotoPreview('');
+        }
+        
+        // Si c'est l'utilisateur actuel, mettre à jour le store
+        if (isCurrentUser) {
+          setUser(profileData);
+        }
+        
       } catch (error) {
         console.error('Error fetching user profile:', error);
+        setFormError('Erreur lors du chargement du profil');
       } finally {
         setLoading(false);
       }
@@ -76,14 +114,22 @@ const ProfilePage = () => {
     if (profileUserId && token) {
       fetchUserProfile();
     }
-  }, [profileUserId, token, isCurrentUser, apiUrl]);
+  }, [profileUserId, token, isCurrentUser, apiUrl, setUser]);
 
   const handleEdit = () => {
     setIsEditing(true);
+    setFormError(null);
+    // Réinitialiser la photo preview avec l'image actuelle
+    if (userProfile?.photo) {
+      setPhotoPreview(getImageUrl(userProfile.photo));
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
+    setFormError(null);
+    setPhoto(null);
+    
     // Reset form to original values
     setEditForm({
       first_name: userProfile?.first_name || '',
@@ -91,31 +137,92 @@ const ProfilePage = () => {
       email: userProfile?.email || '',
       bio: userProfile?.bio || '',
       localisation: userProfile?.localisation || '',
-      phone_number: userProfile?.phone_number || ''
+      phone_number: userProfile?.phone_number || '',
+      username: userProfile?.username || ''
     });
+    
+    // Remettre l'aperçu photo original
+    if (userProfile?.photo) {
+      setPhotoPreview(getImageUrl(userProfile.photo));
+    } else {
+      setPhotoPreview('');
+    }
   };
 
   const handleSave = async () => {
+    setFormError(null);
+    setFormSaving(true);
+    
     try {
-      setLoading(true);
-      const response = await axios.put(`${apiUrl}/api/auth/users/me/`, editForm, {
+      const formData = new FormData();
+      
+      // Ajouter tous les champs texte
+      Object.keys(editForm).forEach(key => {
+        formData.append(key, editForm[key as keyof typeof editForm] || '');
+      });
+      
+      // Ajouter la photo seulement si présente
+      if (photo) {
+        formData.append('photo', photo);
+      }
+      
+      // Utiliser PATCH pour une mise à jour partielle
+      const response = await axios.patch(`${apiUrl}/api/auth/users/me/`, formData, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          // Laisser le navigateur gérer le Content-Type pour FormData
         }
       });
       
       if (response.status === 200) {
-        setUserProfile(response.data);
+        const updatedProfile = response.data;
+        
+        // Mettre à jour l'état local
+        setUserProfile(updatedProfile);
+        
+        // Mettre à jour le store global
+        setUser(updatedProfile);
+        
+        // Gérer l'aperçu de la photo mise à jour
+        if (updatedProfile.photo) {
+          const imageUrl = getImageUrl(updatedProfile.photo);
+          setPhotoPreview(imageUrl);
+        }
+        
+        // Sortir du mode édition
         setIsEditing(false);
-        // Optionnel: afficher un message de succès
+        setPhoto(null);
+        
         console.log('Profil mis à jour avec succès');
+        
+        // Optionnel : afficher un message de succès
+        // setSuccessMessage('Profil mis à jour avec succès !');
+        
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour du profil:', error);
-      // Optionnel: afficher un message d'erreur à l'utilisateur
+      
+      let errorMessage = 'Erreur lors de la mise à jour du profil';
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else {
+          // Gérer les erreurs de validation de champs
+          const fieldErrors = Object.values(error.response.data).flat();
+          if (fieldErrors.length > 0) {
+            errorMessage = fieldErrors.join(', ');
+          }
+        }
+      }
+      
+      setFormError(errorMessage);
     } finally {
-      setLoading(false);
+      setFormSaving(false);
     }
   };
 
@@ -124,6 +231,32 @@ const ProfilePage = () => {
       ...prev,
       [e.target.name]: e.target.value
     }));
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Vérifier la taille du fichier (par exemple, max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setFormError('La taille de l\'image ne peut pas dépasser 5MB');
+        return;
+      }
+      
+      // Vérifier le type de fichier
+      if (!file.type.startsWith('image/')) {
+        setFormError('Veuillez sélectionner un fichier image valide');
+        return;
+      }
+      
+      setPhoto(file);
+      
+      // Créer un aperçu local pour l'édition
+      const previewUrl = URL.createObjectURL(file);
+      setPhotoPreview(previewUrl);
+      
+      // Nettoyer l'URL d'aperçu précédente pour éviter les fuites mémoire
+      return () => URL.revokeObjectURL(previewUrl);
+    }
   };
 
   const handleSendMessage = () => {
@@ -216,23 +349,34 @@ const ProfilePage = () => {
             {/* Avatar */}
             <div className="flex justify-center -mt-16 mb-4">
               <div className="relative">
-                {userProfile?.photo ? (
+                {photoPreview ? (
                   <img
-                    src={userProfile.photo}
-                    alt={userProfile.username}
+                    src={photoPreview}
+                    alt={userProfile?.username || 'Avatar'}
                     className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-lg"
+                    onError={(e) => {
+                      // En cas d'erreur de chargement, afficher l'avatar par défaut
+                      console.error('Erreur de chargement de l\'image:', photoPreview);
+                      setPhotoPreview('');
+                    }}
                   />
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center border-4 border-white dark:border-gray-800 shadow-lg">
                     <span className="text-4xl font-bold text-white">
-                      {userProfile?.username[0]?.toUpperCase()}
+                      {userProfile?.username?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
                 )}
-                {isCurrentUser && (
-                  <button className="absolute bottom-2 right-2 bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors">
+                {isCurrentUser && isEditing && (
+                  <label className="absolute bottom-2 right-2 bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors cursor-pointer">
                     <FiCamera className="w-4 h-4" />
-                  </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoChange}
+                    />
+                  </label>
                 )}
               </div>
             </div>
@@ -258,18 +402,27 @@ const ProfilePage = () => {
               <div className="flex justify-center gap-3 mb-6">
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full transition-colors duration-200"
+                  disabled={formSaving}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-2 rounded-full transition-colors duration-200"
                 >
                   <FiSave className="w-4 h-4" />
-                  Sauvegarder
+                  {formSaving ? 'Sauvegarde...' : 'Sauvegarder'}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-full transition-colors duration-200"
+                  disabled={formSaving}
+                  className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-full transition-colors duration-200"
                 >
                   <FiX className="w-4 h-4" />
                   Annuler
                 </button>
+              </div>
+            )}
+
+            {/* Affichage des erreurs */}
+            {formError && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center">
+                {formError}
               </div>
             )}
           </div>
@@ -289,6 +442,44 @@ const ProfilePage = () => {
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nom d'utilisateur
+                  </label>
+                  {isCurrentUser && isEditing ? (
+                    <input
+                      type="text"
+                      name="username"
+                      value={editForm.username}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  ) : (
+                    <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg">
+                      {userProfile?.username || 'Non spécifié'}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email
+                  </label>
+                  {isCurrentUser && isEditing ? (
+                    <input
+                      type="email"
+                      name="email"
+                      value={editForm.email}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  ) : (
+                    <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg">
+                      {isCurrentUser ? userProfile?.email : 'Privé'}
+                    </p>
+                  )}
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Prénom
@@ -357,28 +548,6 @@ const ProfilePage = () => {
               </h2>
               
               <div className="space-y-4">
-                {/* Email - visible seulement pour le profil actuel ou si public */}
-                {isCurrentUser && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <FiMail className="text-green-600 w-5 h-5" />
-                    <div className="flex-1">
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          name="email"
-                          value={editForm.email}
-                          onChange={handleInputChange}
-                          className="w-full bg-transparent border-none focus:outline-none text-gray-900 dark:text-white"
-                        />
-                      ) : (
-                        <span className="text-gray-900 dark:text-white">
-                          {userProfile?.email}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
                 {/* Téléphone - visible pour tous si renseigné */}
                 {(userProfile?.phone_number || (isCurrentUser && isEditing)) && (
                   <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
