@@ -19,7 +19,7 @@ interface Post {
   id: number
   content: string
   created_at: string
-  author: Author | string // Peut être un objet ou une string selon le serializer
+  author: Author | string
   comments: Comment[]
 }
 
@@ -27,11 +27,10 @@ interface Comment {
   id: number
   content: string
   created_at: string
-  author: Author | string // Peut être un objet ou une string selon le serializer
+  author: Author | string
   post: number
 }
 
-// ✅ Utilitaire pour formater la date
 function safeFormatDate(dateString?: string): string {
   if (!dateString || isNaN(Date.parse(dateString))) {
     return 'Date inconnue'
@@ -39,25 +38,12 @@ function safeFormatDate(dateString?: string): string {
   return format(new Date(dateString), 'PPpp', { locale: fr })
 }
 
-// ✅ Utilitaire pour extraire les infos auteur
 function getAuthorInfo(author: Author | string | undefined): { username: string; photo?: string } {
-  if (!author) {
-    return { username: 'Utilisateur' }
-  }
-  
-  // Si c'est un objet avec les détails
+  if (!author) return { username: 'Utilisateur' }
   if (typeof author === 'object' && author.username) {
-    return {
-      username: author.username,
-      photo: author.photo
-    }
+    return { username: author.username, photo: author.photo }
   }
-  
-  // Si c'est une string (StringRelatedField de Django)
-  if (typeof author === 'string') {
-    return { username: author }
-  }
-  
+  if (typeof author === 'string') return { username: author }
   return { username: 'Utilisateur' }
 }
 
@@ -77,7 +63,7 @@ export default function CommunityFeed() {
     try {
       setLoading(true)
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/`, {
-        headers: { 
+        headers: {
           Authorization: token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json'
         }
@@ -90,17 +76,13 @@ export default function CommunityFeed() {
         throw new Error('Erreur lors du chargement des posts')
       }
       const data = await res.json()
-      console.log('Posts data:', data) // Debug: vérifier la structure des données
-      
-      // S'assurer que chaque post a un tableau de commentaires
       const postsWithComments = data.map((post: Post) => ({
         ...post,
         comments: Array.isArray(post.comments) ? post.comments : []
       }))
-      
       setPosts(postsWithComments)
     } catch (err: any) {
-      console.error('Erreur fetchPosts:', err) // Debug
+      console.error('Erreur fetchPosts:', err)
       toast.error(err?.message ?? 'Erreur inconnue')
     } finally {
       setLoading(false)
@@ -152,18 +134,14 @@ export default function CommunityFeed() {
     }
 
     try {
-      // Option 1: Utiliser l'endpoint spécifique du post (recommandé)
-      
-
-      // Option 2: Si l'option 1 ne fonctionne pas, utiliser l'endpoint général
-       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/`, {
         method: 'POST',
-         headers: {
+        headers: {
           'Content-Type': 'application/json',
-           'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ content, post: postId })
-       })
+      })
 
       if (!res.ok) {
         if (res.status === 401) {
@@ -175,19 +153,16 @@ export default function CommunityFeed() {
       }
 
       const newComment = await res.json()
-      console.log('Nouveau commentaire:', newComment) // Debug
-      
-      // Mise à jour optimiste avec les données de l'utilisateur connecté
       const commentWithAuthor = {
         ...newComment,
-        author: user || newComment.author // Utiliser les données de l'utilisateur connecté si disponibles
+        author: user || newComment.author
       }
-      
+
       setPosts(posts.map(post =>
         post.id === postId
-          ? { 
-              ...post, 
-              comments: Array.isArray(post.comments) 
+          ? {
+              ...post,
+              comments: Array.isArray(post.comments)
                 ? [commentWithAuthor, ...post.comments]
                 : [commentWithAuthor]
             }
@@ -230,21 +205,16 @@ export default function CommunityFeed() {
       ) : (
         posts.map((post) => {
           const authorInfo = getAuthorInfo(post.author)
-          
           return (
             <div key={post.id} className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <Avatar>
                   <AvatarImage src={authorInfo.photo || ''} />
-                  <AvatarFallback>
-                    {authorInfo.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
+                  <AvatarFallback>{authorInfo.username.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium">
-                      {authorInfo.username}
-                    </h3>
+                    <h3 className="font-medium">{authorInfo.username}</h3>
                     <span className="text-xs text-gray-500">
                       {safeFormatDate(post.created_at)}
                     </span>
@@ -254,31 +224,24 @@ export default function CommunityFeed() {
               </div>
 
               <div className="mt-4 pl-11 space-y-4">
-                {post.comments && post.comments.length > 0 && (
+                {post.comments?.length > 0 && (
                   <div className="space-y-3">
                     {post.comments.map((comment) => {
                       const commentAuthorInfo = getAuthorInfo(comment.author)
-                      
                       return (
                         <div key={comment.id} className="flex items-start gap-3">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={commentAuthorInfo.photo || ''} />
-                            <AvatarFallback>
-                              {commentAuthorInfo.username.charAt(0).toUpperCase()}
-                            </AvatarFallback>
+                            <AvatarFallback>{commentAuthorInfo.username.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-medium">
-                                {commentAuthorInfo.username}
-                              </h4>
+                              <h4 className="text-sm font-medium">{commentAuthorInfo.username}</h4>
                               <span className="text-xs text-gray-500">
                                 {safeFormatDate(comment.created_at)}
                               </span>
                             </div>
-                            <p className="text-sm mt-1 whitespace-pre-line">
-                              {comment.content}
-                            </p>
+                            <p className="text-sm mt-1 whitespace-pre-line">{comment.content}</p>
                           </div>
                         </div>
                       )
@@ -287,10 +250,7 @@ export default function CommunityFeed() {
                 )}
 
                 {isAuthenticated && (
-                  <CommentForm
-                    postId={post.id}
-                    onSubmit={handleCommentSubmit}
-                  />
+                  <CommentForm key={`form-${post.id}`} postId={post.id} onSubmit={handleCommentSubmit} />
                 )}
               </div>
             </div>
