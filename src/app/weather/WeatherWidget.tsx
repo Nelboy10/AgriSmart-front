@@ -1,29 +1,57 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { FaCloudSun, FaTemperatureHigh, FaWind, FaMapMarkerAlt, FaSearch } from 'react-icons/fa'
 
-export default function WeatherWidget({ userLocation }: { userLocation?: string }) {
+export default function WeatherWidget() {
   const [weather, setWeather] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [location, setLocation] = useState(userLocation || '')
-  const [showInput, setShowInput] = useState(!userLocation)
+  const [location, setLocation] = useState('')
+  const [showInput, setShowInput] = useState(false)
 
-  // Fetch météo si localisation connue
   useEffect(() => {
-    if (location) {
-      fetchWeather(location)
-    }
-    // eslint-disable-next-line
-  }, [location])
+    getUserCityAndFetchWeather()
+  }, [])
 
-  function fetchWeather(loc: string) {
+  async function getUserCityAndFetchWeather() {
+    setLoading(true)
+    try {
+      const pos = await getCurrentPosition()
+      const city = await reverseGeocode(pos.coords.latitude, pos.coords.longitude)
+      if (city) {
+        setLocation(city)
+        fetchWeather(city)
+      } else {
+        throw new Error("Ville non trouvée")
+      }
+    } catch (err) {
+      setError("Impossible de récupérer votre localisation.")
+      setShowInput(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function getCurrentPosition(): Promise<GeolocationPosition> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject()
+      navigator.geolocation.getCurrentPosition(resolve, reject)
+    })
+  }
+
+  async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`)
+    const data = await res.json()
+    return data?.address?.city || data?.address?.town || data?.address?.village || null
+  }
+
+  function fetchWeather(city: string) {
     setLoading(true)
     setError('')
-    setWeather(null)
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/weather/live/?location=${encodeURIComponent(loc)}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/weather/live/?location=${encodeURIComponent(city)}`)
       .then(res => {
-        if (!res.ok) throw new Error('Ville non trouvée ou erreur météo')
+        if (!res.ok) throw new Error('Ville non trouvée')
         return res.json()
       })
       .then(data => setWeather(data))
@@ -45,7 +73,7 @@ export default function WeatherWidget({ userLocation }: { userLocation?: string 
         <FaCloudSun className="text-2xl" />
         Météo
       </div>
-      {/* Formulaire si pas de localisation */}
+
       {showInput && (
         <form onSubmit={handleSubmit} className="flex w-full gap-2 mb-2">
           <input
@@ -63,8 +91,9 @@ export default function WeatherWidget({ userLocation }: { userLocation?: string 
           </button>
         </form>
       )}
-      {/* Affichage météo */}
+
       {loading && <div className="text-gray-400 animate-pulse">Chargement météo...</div>}
+
       {error && (
         <div className="text-red-600 text-sm text-center">
           {error}
@@ -76,6 +105,7 @@ export default function WeatherWidget({ userLocation }: { userLocation?: string 
           </button>
         </div>
       )}
+
       {!loading && weather && (
         <div className="flex flex-col items-center gap-2 w-full">
           <div className="flex items-center gap-2 text-green-800 text-xl font-semibold">
