@@ -7,7 +7,7 @@ import { useTheme } from 'next-themes'
 const WeatherWidget = dynamic(() => import('../weather/WeatherWidget'), {
   ssr: false,
   loading: () => (
-    <div className="h-64 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl border border-blue-100/50 dark:border-blue-800/30">
+    <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl border border-blue-100/50 dark:border-blue-800/30">
       <div className="w-8 h-8 border-4 border-blue-200 dark:border-blue-700 border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin mb-3"></div>
       <p className="text-sm font-medium">Chargement météo...</p>
     </div>
@@ -17,7 +17,7 @@ const WeatherWidget = dynamic(() => import('../weather/WeatherWidget'), {
 const CommunityFeed = dynamic(() => import('@/components/CommunityFeed'), {
   ssr: false,
   loading: () => (
-    <div className="h-64 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-800/50 rounded-2xl">
+    <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-800/50 rounded-2xl">
       <div className="w-8 h-8 border-4 border-emerald-200 dark:border-emerald-700 border-t-emerald-500 dark:border-t-emerald-400 rounded-full animate-spin mb-3"></div>
       <p className="text-sm font-medium">Chargement de la communauté...</p>
     </div>
@@ -29,11 +29,12 @@ export default function HomePage() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-green-50/20 to-blue-50/30 dark:from-slate-900 dark:via-emerald-900/10 dark:to-blue-900/10`}>
-      {/* Contenu principal */}
       <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 lg:py-16">
-        <div className="grid lg:grid-cols-4 gap-6 xl:gap-8">
-          {/* Colonne principale - Communauté */}
-          <div className="lg:col-span-3 space-y-6 xl:space-y-8">
+        {/* Nouvelle disposition en colonnes flexibles */}
+        <div className="flex flex-col lg:flex-row gap-6 xl:gap-8">
+          {/* Colonne principale - Prend 2/3 de l'espace sur grand écran */}
+          <div className="flex-1 lg:flex-[2] space-y-6 xl:space-y-8">
+            {/* Section Communauté - Hauteur automatique */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -58,13 +59,13 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* Section Statistiques */}
+            {/* Section Statistiques - Fixe la hauteur */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6"
             >
               {[
                 { icon: <Sun className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />, title: "Ensoleillement", value: "8.2h", description: "Moyenne journalière", color: "emerald" },
@@ -73,7 +74,7 @@ export default function HomePage() {
               ].map((item, index) => (
                 <div 
                   key={index}
-                  className={`bg-gradient-to-br from-${item.color}-50 to-${item.color}-100 dark:from-${item.color}-900/30 dark:to-${item.color}-800/30 rounded-xl p-4 sm:p-5 border border-${item.color}-100 dark:border-${item.color}-800/30`}
+                  className={`bg-gradient-to-br from-${item.color}-50 to-${item.color}-100 dark:from-${item.color}-900/30 dark:to-${item.color}-800/30 rounded-xl p-4 sm:p-5 border border-${item.color}-100 dark:border-${item.color}-800/30 min-h-[120px]`}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`p-2 bg-${item.color}-100 dark:bg-${item.color}-900/40 rounded-lg`}>
@@ -88,9 +89,9 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Sidebar - Météo et Statistiques */}
-          <div className="lg:col-span-1 space-y-6 xl:space-y-8">
-            {/* Widget Météo - Version élargie */}
+          {/* Sidebar - Prend 1/3 de l'espace sur grand écran */}
+          <div className="flex-1 space-y-6 xl:space-y-8">
+            {/* Widget Météo - Hauteur fixe avec overflow auto si nécessaire */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -98,7 +99,7 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="sticky top-6 xl:top-8"
             >
-              <div className="bg-white dark:bg-slate-800 rounded-2xl xl:rounded-3xl shadow-md dark:shadow-none border border-slate-100 dark:border-slate-700 overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl xl:rounded-3xl shadow-md dark:shadow-none border border-slate-100 dark:border-slate-700 overflow-hidden h-fit">
                 <div className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 p-5 sm:p-6">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg border border-white/30">
@@ -112,13 +113,13 @@ export default function HomePage() {
                 </div>
 
                 <div className="p-4 sm:p-5">
-                  <div className="min-h-[280px] sm:min-h-[320px]">
+                  <div className="min-h-[300px]">
                     <WeatherWidget />
                   </div>
                 </div>
               </div>
 
-              {/* Activité Récente */}
+              {/* Activité Récente - Hauteur automatique */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -151,17 +152,19 @@ export default function HomePage() {
                 </div>
               </motion.div>
 
-              {/* Bannière d'action */}
+              {/* Bannière d'action - Hauteur fixe */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-5 sm:p-6 text-white shadow-md overflow-hidden relative"
+                className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-5 sm:p-6 text-white shadow-md overflow-hidden relative h-[180px]"
               >
-                <div className="relative z-10">
-                  <h3 className="text-lg font-bold mb-2">Rejoignez la communauté</h3>
-                  <p className="text-sm text-emerald-100/90 mb-4">Connectez-vous avec d'agriculteurs locaux et partagez vos expériences.</p>
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold mb-2">Rejoignez la communauté</h3>
+                    <p className="text-sm text-emerald-100/90">Connectez-vous avec d'agriculteurs locaux et partagez vos expériences.</p>
+                  </div>
                   <button className="w-full bg-white text-emerald-700 hover:bg-white/90 transition-colors py-2 px-4 rounded-lg text-sm font-semibold shadow-sm">
                     S'inscrire maintenant
                   </button>
