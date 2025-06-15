@@ -42,8 +42,8 @@ interface User {
 // Configuration des liens de navigation avec icônes
 const navigationLinks = [
   { 
-    href: '/forum', 
-    label: 'Forum', 
+    href: '/community', 
+    label: 'Discussions', 
     icon: MessageSquare,
     description: 'Discussions et échanges'
   },

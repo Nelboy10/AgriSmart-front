@@ -15,6 +15,7 @@ interface User {
   created_at?: string;
   is_active?: boolean;
   phone_number?: string;
+  is_online?: boolean;
 }
 
 interface ContentStore {
