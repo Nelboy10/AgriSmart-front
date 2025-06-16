@@ -217,13 +217,13 @@ export default function ForumView() {
 
   if (selectedTopic) {
     return (
-      <div className="flex-1 flex flex-col bg-background text-foreground">
+      <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
         {/* Topic Header */}
-        <div className="p-4 border-b border-border bg-card">
+        <div className="p-4 border-b border-border bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSelectedTopic(null)}
-              className="p-2 rounded-lg hover:bg-accent"
+              className="p-2 rounded-lg hover:bg-accent/50"
             >
               <ArrowLeft className="text-muted-foreground" size={20} />
             </button>
@@ -262,7 +262,7 @@ export default function ForumView() {
           {!loading.posts && !error.posts && (
             <>
               {/* Main Topic Post */}
-              <div className="bg-card rounded-xl p-6 border border-border">
+              <div className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-6 border border-border/50 backdrop-blur-sm">
                 <div className="flex gap-4">
                   <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
                     {selectedTopic.author.username.charAt(0)}
@@ -279,7 +279,7 @@ export default function ForumView() {
 
               {/* Replies */}
               {posts.map(post => (
-                <div key={post.id} className="bg-card rounded-xl p-6 border border-border">
+                <div key={post.id} className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-6 border border-border/50 backdrop-blur-sm">
                   <div className="flex gap-4">
                     <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-secondary-foreground text-xl">
                       {post.author.username.charAt(0)}
@@ -293,7 +293,7 @@ export default function ForumView() {
                         </span>
                       </div>
                       <p className="whitespace-pre-line">{post.content}</p>
-                      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+                      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/50">
                         <button 
                           onClick={() => toggleLike(post.id)}
                           className={`flex items-center gap-1 ${post.user_has_liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
@@ -316,7 +316,7 @@ export default function ForumView() {
 
         {/* New Post Form */}
         {!selectedTopic.is_locked && (
-          <div className="p-4 border-t border-border bg-card">
+          <div className="p-4 border-t border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-accent-foreground">
                 {user?.username.charAt(0)}
@@ -327,18 +327,18 @@ export default function ForumView() {
                   onChange={(e) => setNewPostContent(e.target.value)}
                   placeholder="Écrivez votre réponse..."
                   rows={3}
-                  className="w-full bg-input border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                  className="w-full bg-input border border-border/50 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
                 />
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center gap-2">
                     <button 
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
+                      className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50"
                     >
                       <Smile size={18} />
                     </button>
-                    <button className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent">
+                    <button className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50">
                       <Paperclip size={18} />
                     </button>
                   </div>
@@ -382,14 +382,14 @@ export default function ForumView() {
 
   if (selectedCategory) {
     return (
-      <div className="flex-1 flex flex-col bg-background text-foreground">
+      <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
         {/* Category Header */}
-        <div className="p-4 border-b border-border bg-card">
-          <div className="flex items-center justify-between">
+        <div className="p-4 border-b border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+          <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="p-2 rounded-lg hover:bg-accent"
+                className="p-2 rounded-lg hover:bg-accent/50"
               >
                 <ArrowLeft className="text-muted-foreground" size={20} />
               </button>
@@ -428,7 +428,7 @@ export default function ForumView() {
                 <div
                   key={topic.id}
                   onClick={() => setSelectedTopic(topic)}
-                  className="bg-card rounded-xl p-4 border border-border hover:border-primary/50 cursor-pointer transition-colors"
+                  className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-4 border border-border/50 hover:border-primary/50 cursor-pointer transition-colors backdrop-blur-sm"
                 >
                   <div className="flex justify-between">
                     <div className="flex-1">
@@ -468,13 +468,13 @@ export default function ForumView() {
         {/* New Topic Modal */}
         {showNewTopic && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
-              <div className="p-6 border-b border-border">
+            <div className="bg-white/95 dark:bg-gray-900/95 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border/50 backdrop-blur-sm">
+              <div className="p-6 border-b border-border/50">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold">Créer un nouveau sujet</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Créer un nouveau sujet</h2>
                   <button
                     onClick={() => setShowNewTopic(false)}
-                    className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
+                    className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50"
                   >
                     <X size={20} />
                   </button>
@@ -491,7 +491,7 @@ export default function ForumView() {
                       value={newTopic.title}
                       onChange={(e) => setNewTopic({ ...newTopic, title: e.target.value })}
                       placeholder="Donnez un titre à votre sujet..."
-                      className="w-full bg-input border border-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     />
                   </div>
                   <div>
@@ -503,15 +503,15 @@ export default function ForumView() {
                       value={newTopic.content}
                       onChange={(e) => setNewTopic({ ...newTopic, content: e.target.value })}
                       placeholder="Développez votre sujet ici..."
-                      className="w-full bg-input border border-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                      className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
                     />
                   </div>
                 </div>
               </div>
-              <div className="p-6 border-t border-border flex justify-end gap-3">
+              <div className="p-6 border-t border-border/50 flex justify-end gap-3">
                 <button
                   onClick={() => setShowNewTopic(false)}
-                  className="px-4 py-2 text-muted-foreground border border-border rounded-lg hover:bg-accent transition-colors"
+                  className="px-4 py-2 text-muted-foreground border border-border/50 rounded-lg hover:bg-accent/50 transition-colors"
                 >
                   Annuler
                 </button>
@@ -531,11 +531,11 @@ export default function ForumView() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-background text-foreground">
+    <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
       {/* Forum Header */}
-      <div className="p-4 border-b border-border bg-card">
+      <div className="p-4 border-b border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Forum Communautaire</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Forum Communautaire</h2>
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
@@ -544,7 +544,7 @@ export default function ForumView() {
                 placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary w-64"
+                className="pl-10 pr-4 py-2 bg-white/50 dark:bg-gray-800/50 border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary w-64"
               />
             </div>
             {user?.is_online && (
@@ -580,7 +580,7 @@ export default function ForumView() {
               <div
                 key={category.id}
                 onClick={() => setSelectedCategory(category)}
-                className="bg-card rounded-2xl p-6 border border-border hover:border-primary/50 cursor-pointer transition-colors"
+                className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-6 border border-border/50 hover:border-primary/50 cursor-pointer transition-colors backdrop-blur-sm"
               >
                 <div className="flex justify-between">
                   <div className="flex items-start gap-4">
@@ -610,13 +610,13 @@ export default function ForumView() {
       {/* New Category Modal */}
       {showNewCategory && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl max-w-md w-full border border-border">
-            <div className="p-6 border-b border-border">
+          <div className="bg-white/95 dark:bg-gray-900/95 rounded-2xl max-w-md w-full border border-border/50 backdrop-blur-sm">
+            <div className="p-6 border-b border-border/50">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Nouvelle catégorie</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Nouvelle catégorie</h2>
                 <button
                   onClick={() => setShowNewCategory(false)}
-                  className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
+                  className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50"
                 >
                   <X size={20} />
                 </button>
@@ -633,7 +633,7 @@ export default function ForumView() {
                     value={newCategory.name}
                     onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                     placeholder="Nom de la nouvelle catégorie..."
-                    className="w-full bg-input border border-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   />
                 </div>
                 <div>
@@ -644,16 +644,16 @@ export default function ForumView() {
                     value={newCategory.description}
                     onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
                     placeholder="Description de la catégorie..."
-                    className="w-full bg-input border border-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                    className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
                     rows={3}
                   />
                 </div>
               </div>
             </div>
-            <div className="p-6 border-t border-border flex justify-end gap-3">
+            <div className="p-6 border-t border-border/50 flex justify-end gap-3">
               <button
                 onClick={() => setShowNewCategory(false)}
-                className="px-4 py-2 text-muted-foreground border border-border rounded-lg hover:bg-accent transition-colors"
+                className="px-4 py-2 text-muted-foreground border border-border/50 rounded-lg hover:bg-accent/50 transition-colors"
               >
                 Annuler
               </button>

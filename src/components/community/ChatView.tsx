@@ -14,7 +14,7 @@ interface Thread {
   id: string;
   thread_type: 'private' | 'group';
   title?: string;
-  participants: { id: string; username: string; is_online: boolean }[];
+  participants: User[];
   last_message: {
     content: string;
     created_at: string;
@@ -39,7 +39,10 @@ interface User {
   username: string;
   first_name: string;
   last_name: string;
+  photo: string;
+  is_online: boolean;
 }
+
 
 // Composant pour afficher les options de modification et suppression des messages
 const MessageOptions = ({ onEdit, onDelete, onCancel }: { onEdit: () => void; onDelete: () => void; onCancel: () => void }) => {
@@ -354,432 +357,442 @@ export default function ChatView() {
     return () => clearTimeout(timer);
   }, [userSearchQuery]);
 
-  // Design: Rendu de l'interface utilisateur lorsque aucun thread n'est sélectionné
-  if (!selectedThread) {
-    return (
-      <div className="flex-1 flex bg-background text-foreground">
-        {/* Liste des threads */}
-        <div className="w-full md:w-80 border-r border-border flex flex-col">
-          <div className="p-4 border-b border-border bg-card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Messages</h2>
-              <button
-                onClick={() => setShowNewChat(true)}
-                className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
-              >
-                <Plus size={18} />
-              </button>
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-              />
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-auto">
-            {loading.threads && (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
-              </div>
-            )}
-
-            {error.threads && (
-              <div className="bg-destructive/10 text-destructive p-4 rounded-lg m-4">
-                {error.threads}
-              </div>
-            )}
-
-            {!loading.threads && !error.threads && (
-              <>
-                {threads
-                  .filter(thread =>
-                    thread.participants.some(p =>
-                      p.username !== user?.username &&
-                      p.username.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                  )
-                  .map(thread => {
-                    const otherUser = thread.participants.find(p => p.username !== user?.username);
-                    return (
-                      <div
-                        key={thread.id}
-                        onClick={() => setSelectedThread(thread)}
-                        className={`p-4 border-b border-border hover:bg-accent/50 cursor-pointer transition-colors relative overflow-hidden
-                          ${thread.unread_count > 0 ? 'bg-accent/20' : ''}
-                        `}
-                      >
-                        {/* Indicateur de message non lu */}
-                        {thread.unread_count > 0 && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
-                        )}
-                        <div className="flex items-start gap-3">
-                          <div className="relative">
-                            {thread.thread_type === 'group' ? (
-                              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                                <Users size={20} />
-                              </div>
-                            ) : (
-                              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
-                                {otherUser?.username.charAt(0)}
-                              </div>
-                            )}
-                            {thread.participants.some(p => p.is_online && p.id !== user?.username) && (
-                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between mb-1">
-                              <h3 className="font-semibold truncate">
-                                {thread.thread_type === 'group'
-                                  ? thread.title
-                                  : otherUser?.username}
-                              </h3>
-                              <span className="text-xs text-muted-foreground">
-                                {formatTimeAgo(thread.updated_at)}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {thread.last_message ? (
-                                thread.last_message.sender ? (
-                                  `${thread.last_message.sender.username}: ${thread.last_message.content}`
-                                ) : (
-                                  `Message: ${thread.last_message.content}`
-                                )
-                              ) : 'Aucun message'}
-                            </p>
-                            {thread.unread_count > 0 && (
-                              <div className="flex justify-between items-center mt-2">
-                                <span></span>
-                                <span className="bg-primary text-primary-foreground text-xs rounded-full px-2 py-1">
-                                  {thread.unread_count}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="hidden md:flex flex-1 items-center justify-center bg-muted/50">
-          <div className="text-center p-8">
-            <MessageCircle size={48} className="text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Sélectionnez une conversation</h3>
-            <p className="text-muted-foreground">Choisissez une conversation existante ou créez-en une nouvelle</p>
-          </div>
-        </div>
-
-        {/* Nouveau chat: Modal */}
-        {showNewChat && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-2xl max-w-md w-full border border-border">
-              <div className="p-6 border-b border-border">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold">Nouvelle conversation</h2>
-                  <button
-                    onClick={() => {
-                      setShowNewChat(false);
-                      setUserSearchQuery('');
-                      setSearchResults([]);
-                    }}
-                    className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Rechercher un utilisateur
-                    </label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-                      <input
-                        type="text"
-                        placeholder="Nom d'utilisateur..."
-                        value={userSearchQuery}
-                        onChange={(e) => setUserSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      />
-                    </div>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {loading.searching ? (
-                      <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary" />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {searchResults.map(user => (
-                          <div
-                            key={user.id}
-                            onClick={() => startPrivateChat(user.id)}
-                            className="flex items-center gap-3 p-3 hover:bg-accent/30 rounded-lg cursor-pointer"
-                          >
-                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
-                              {user.username.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="font-medium">@{user.username}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {user.first_name} {user.last_name}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Design: Rendu de l'interface utilisateur lorsque un thread est sélectionné
+  // Design: Rendu de l'interface utilisateur
   return (
-    <div className="flex-1 flex bg-background text-foreground">
-      <div className="hidden md:block w-80 border-r border-border flex flex-col">
-        {/* Liste des threads */}
-      </div>
-
-      <div className="flex-1 flex flex-col">
-        {/* En-tête du chat */}
-        <div className="p-4 border-b border-border bg-card">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSelectedThread(null)}
-                className="md:hidden p-2 rounded-lg hover:bg-accent"
-              >
-                <ArrowLeft className="text-muted-foreground" size={20} />
-              </button>
-              <div className="relative">
-                {selectedThread.thread_type === 'group' ? (
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                    <Users size={20} />
-                  </div>
-                ) : (
-                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-lg">
-                    {selectedThread.participants.find(p => p.username !== user?.username)?.username.charAt(0)}
-                  </div>
-                )}
-                {selectedThread.participants.some(p => p.is_online && p.username !== user?.username) && (
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {selectedThread.thread_type === 'group'
-                    ? selectedThread.title
-                    : selectedThread.participants.find(p => p.username !== user?.username)?.username}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedThread.thread_type === 'group'
-                    ? `${selectedThread.participants.length} membres`
-                    : selectedThread.participants.some(p => p.is_online && p.username !== user?.username)
-                      ? 'En ligne'
-                      : 'Hors ligne'}
-                </p>
-              </div>
-            </div>
-            <button className="p-2 rounded-lg hover:bg-accent">
-              <MoreVertical className="text-muted-foreground" size={20} />
+    <div className="flex-1 flex bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/80 dark:to-gray-900">
+      {/* Liste des threads - Toujours visible sur les grands écrans */}
+      <div className={`w-full md:w-80 border-r border-border flex flex-col bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm ${selectedThread ? 'hidden md:flex' : 'flex'}`}>
+        <div className="p-4 border-b border-border/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+          <div className="flex justify-between items-center mb-4 ">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Messages</h2>
+            <button
+              onClick={() => setShowNewChat(true)}
+              className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Plus size={18} />
             </button>
           </div>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-900 dark:text-gray-50" size={18} />
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white/70 dark:bg-gray-900/70 border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary backdrop-blur-sm"
+            />
+          </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-auto p-4 space-y-4 bg-muted/10">
-          {loading.messages && (
+        <div className="flex-1 overflow-auto">
+          {loading.threads && (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
             </div>
           )}
 
-          {error.messages && (
-            <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
-              {error.messages}
+          {error.threads && (
+            <div className="bg-destructive/10 text-destructive p-4 rounded-lg m-4">
+              {error.threads}
             </div>
           )}
 
-          {!loading.messages && !error.messages && (
+          {!loading.threads && !error.threads && (
             <>
-              {messages.map(message => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender.username === user?.username ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex gap-2 max-w-xs lg:max-w-md ${message.sender.username === user?.username ? 'flex-row-reverse' : ''}`}>
-                    {message.message_type !== 'system' && (
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-secondary text-secondary-foreground">
-                        {message.sender.username.charAt(0)}
-                      </div>
-                    )}
-                    <div className={`rounded-2xl px-4 py-2 ${
-                      message.sender.username === user?.username
-                        ? 'bg-primary text-primary-foreground'
-                        : message.message_type === 'system'
-                          ? 'bg-muted text-muted-foreground text-sm italic'
-                          : 'bg-card text-foreground border border-border'
-                    }`}>
-                      {message.message_type !== 'system' && (
-                        <p className="text-xs font-medium mb-1">
-                          {message.sender.username === user?.username ? 'Vous' : message.sender.username}
-                        </p>
+              {threads
+                .filter(thread =>
+                  thread.participants.some(p =>
+                    p.username !== user?.username &&
+                    p.username.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                )
+                .map(thread => {
+                  const otherUser = thread.participants.find(p => p.username !== user?.username);
+                  return (
+                    <div
+                      key={thread.id}
+                      onClick={() => setSelectedThread(thread)}
+                      className={`p-4 border-b border-border hover:bg-accent/50 cursor-pointer transition-colors relative overflow-hidden
+                        ${thread.unread_count > 0 ? 'bg-accent/20' : ''}
+                      `}
+                    >
+                      {/* Indicateur de message non lu */}
+                      {thread.unread_count > 0 && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
                       )}
-                      {editingMessage.id === message.id ? (
-                        <div>
-                          <textarea
-                            value={editContent}
-                            onChange={(e) => setEditContent(e.target.value)}
-                            className="w-full bg-input border border-border rounded-lg px-2 py-1 focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                          />
-                          <div className="flex justify-end gap-2 mt-2">
-                            <button
-                              onClick={handleEditMessage}
-                              className="px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-                            >
-                              Sauvegarder
-                            </button>
-                            <button
-                              onClick={cancelEditing}
-                              className="px-2 py-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90"
-                            >
-                              Annuler
-                            </button>
-                          </div>
+                      <div className="flex items-start gap-3">
+                        <div className="relative">
+                          {thread.thread_type === 'group' ? (
+                            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                              <Users size={20} />
+                            </div>
+                          ) : (
+                            <div className="relative w-12 h-12">
+                              {thread.participants.find(p => p.username !== user?.username)?.photo ? (
+                                <img 
+                                  src={thread.participants.find(p => p.username !== user?.username)?.photo}
+                                  alt="Photo de profil"
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
+                                  {thread.participants.find(p => p.username !== user?.username)?.username.charAt(0)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {thread.participants.some(p => p.is_online && p.id !== user?.username) && (
+                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
+                          )}
                         </div>
-                      ) : (
-                        <p className="whitespace-pre-line">{message.content}</p>
-                      )}
-                      <div className="flex items-center justify-end gap-2 mt-1">
-                        {message.is_edited && (
-                          <span className="text-xs italic">modifié</span>
-                        )}
-                        <span className={`text-xs ${
-                          message.sender.username === user?.username
-                            ? 'text-primary-foreground/70'
-                            : 'text-muted-foreground'
-                        }`}>
-                          {formatTimeAgo(message.timestamp)}
-                        </span>
-                        {message.sender.username === user?.username && (
-                          <span className={`text-xs ${
-                            (message.seen_by?.length || 0) > 0
-                              ? 'text-primary-foreground/70'
-                              : 'text-muted-foreground'
-                          }`}>
-                            {message.seen_by?.length > 0 ? 'Vu' : ''}
-                          </span>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between mb-1">
+                            <h3 className="font-semibold truncate">
+                              {thread.thread_type === 'group'
+                                ? thread.title
+                                : otherUser?.username}
+                            </h3>
+                            <span className="text-xs text-muted-foreground">
+                              {formatTimeAgo(thread.updated_at)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {thread.last_message ? (
+                              thread.last_message.sender ? (
+                                `${thread.last_message.sender.username}: ${thread.last_message.content}`
+                              ) : (
+                                `Message: ${thread.last_message.content}`
+                              )
+                            ) : 'Aucun message'}
+                          </p>
+                          {thread.unread_count > 0 && (
+                            <div className="flex justify-between items-center mt-2">
+                              <span></span>
+                              <span className="bg-primary text-primary-foreground text-xs rounded-full px-2 py-1">
+                                {thread.unread_count}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    {message.sender.username === user?.username && (
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowOptions(showOptions === message.id ? null : message.id)}
-                          className="p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-                        {showOptions === message.id && (
-                          <MessageOptions
-                            onEdit={() => startEditing(message)}
-                            onDelete={() => {
-                              setMessageToDelete(message.id);
-                              setShowDeleteDialog(true);
-                            }}
-                            onCancel={() => setShowOptions(null)}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+                  );
+                })}
             </>
-          )}
-        </div>
-
-        {/* Envoi de message: Zone de saisie */}
-        <div className="p-4 border-t border-border bg-card">
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
-            >
-              <Smile size={20} />
-            </button>
-            <button className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent">
-              <Paperclip size={20} />
-            </button>
-            <div className="flex-1 relative">
-              <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Écrivez votre message..."
-                rows={1}
-                className="w-full bg-input border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-              />
-              {showEmojiPicker && (
-                <div ref={emojiPickerRef} className="absolute bottom-14 left-0 z-10">
-                  <EmojiPicker
-                    onEmojiClick={(emojiData) => {
-                      setNewMessage(prev => prev + emojiData.emoji);
-                    }}
-                    width={300}
-                    height={350}
-                    previewConfig={{ showPreview: false }}
-                  />
-                </div>
-              )}
-            </div>
-            <button
-              onClick={sendMessage}
-              disabled={!newMessage.trim() || loading.sending}
-              className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading.sending ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary-foreground" />
-              ) : (
-                <Send size={20} />
-              )}
-            </button>
-          </div>
-          {error.sending && (
-            <div className="mt-2 text-sm text-destructive">{error.sending}</div>
           )}
         </div>
       </div>
 
+      {/* Vue de conversation ou vue vide */}
+      <div className={`flex-1 flex flex-col ${!selectedThread ? 'hidden md:flex' : 'flex'}`}>
+        {!selectedThread ? (
+          <div className="flex-1 items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 hidden md:flex">
+            <div className="text-center p-8">
+              <MessageCircle size={48} className="text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Sélectionnez une conversation</h3>
+              <p className="text-muted-foreground">Choisissez une conversation existante ou créez-en une nouvelle</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* En-tête du chat */}
+            <div className="p-4 border-b border-border bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSelectedThread(null)}
+                    className="md:hidden p-2 rounded-lg hover:bg-accent"
+                  >
+                    <ArrowLeft className="text-muted-foreground" size={20} />
+                  </button>
+                  <div className="relative">
+                    {selectedThread.thread_type === 'group' ? (
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                        <Users size={20} />
+                      </div>
+                    ) : (
+                      <div className="relative w-10 h-10">
+                        {selectedThread.participants.find(p => p.username !== user?.username)?.photo ? (
+                          <img 
+                            src={selectedThread.participants.find(p => p.username !== user?.username)?.photo}
+                            alt="Photo de profil"
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-lg">
+                            {selectedThread.participants.find(p => p.username !== user?.username)?.username.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedThread.participants.some(p => p.is_online && p.username !== user?.username) && (
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">
+                      {selectedThread.thread_type === 'group'
+                        ? selectedThread.title
+                        : selectedThread.participants.find(p => p.username !== user?.username)?.username}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedThread.thread_type === 'group'
+                        ? `${selectedThread.participants.length} membres`
+                        : selectedThread.participants.some(p => p.is_online && p.username !== user?.username)
+                          ? 'En ligne'
+                          : 'Hors ligne'}
+                    </p>
+                  </div>
+                </div>
+                <button className="p-2 rounded-lg hover:bg-accent">
+                  <MoreVertical className="text-muted-foreground" size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-auto p-4 space-y-4 bg-white/80 dark:bg-gray-900/80">
+              {loading.messages && (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
+                </div>
+              )}
+
+              {error.messages && (
+                <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
+                  {error.messages}
+                </div>
+              )}
+
+              {!loading.messages && !error.messages && (
+                <>
+                  {messages.map(message => (
+                    <div
+                      key={message.id}
+                      className={`flex ${message.sender.username === user?.username ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`flex gap-2 max-w-xs lg:max-w-md ${message.sender.username === user?.username ? 'flex-row-reverse' : ''}`}>
+                        {message.message_type !== 'system' && (
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-secondary text-secondary-foreground">
+                            {message.sender.username.charAt(0)}
+                          </div>
+                        )}
+                        <div className={`rounded-2xl px-4 py-2 ${
+                          message.sender.username === user?.username
+                            ? 'bg-primary text-primary-foreground'
+                            : message.message_type === 'system'
+                              ? 'bg-muted text-muted-foreground text-sm italic'
+                              : 'bg-card text-foreground border border-border'
+                        }`}>
+                          {message.message_type !== 'system' && (
+                            <p className="text-xs font-medium mb-1">
+                              {message.sender.username === user?.username ? 'Vous' : message.sender.username}
+                            </p>
+                          )}
+                          {editingMessage.id === message.id ? (
+                            <div>
+                              <textarea
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                className="w-full bg-input border border-border rounded-lg px-2 py-1 focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                              />
+                              <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                  onClick={handleEditMessage}
+                                  className="px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+                                >
+                                  Sauvegarder
+                                </button>
+                                <button
+                                  onClick={cancelEditing}
+                                  className="px-2 py-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90"
+                                >
+                                  Annuler
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="whitespace-pre-line">{message.content}</p>
+                          )}
+                          <div className="flex items-center justify-end gap-2 mt-1">
+                            {message.is_edited && (
+                              <span className="text-xs italic">modifié</span>
+                            )}
+                            <span className={`text-xs ${
+                              message.sender.username === user?.username
+                                ? 'text-primary-foreground/70'
+                                : 'text-muted-foreground'
+                            }`}>
+                              {formatTimeAgo(message.timestamp)}
+                            </span>
+                            {message.sender.username === user?.username && (
+                              <span className={`text-xs ${
+                                (message.seen_by?.length || 0) > 0
+                                  ? 'text-primary-foreground/70'
+                                  : 'text-muted-foreground'
+                              }`}>
+                                {message.seen_by?.length > 0 ? 'Vu' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {message.sender.username === user?.username && (
+                          <div className="relative">
+                            <button
+                              onClick={() => setShowOptions(showOptions === message.id ? null : message.id)}
+                              className="p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                            {showOptions === message.id && (
+                              <MessageOptions
+                                onEdit={() => startEditing(message)}
+                                onDelete={() => {
+                                  setMessageToDelete(message.id);
+                                  setShowDeleteDialog(true);
+                                }}
+                                onCancel={() => setShowOptions(null)}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
+
+            {/* Zone de saisie */}
+            <div className="p-4 border-t border-border bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+              <div className="flex items-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
+                >
+                  <Smile size={20} />
+                </button>
+                <button className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent">
+                  <Paperclip size={20} />
+                </button>
+                <div className="flex-1 relative">
+                  <textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Écrivez votre message..."
+                    rows={1}
+                    className="w-full bg-input border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                  />
+                  {showEmojiPicker && (
+                    <div ref={emojiPickerRef} className="absolute bottom-14 left-0 z-10">
+                      <EmojiPicker
+                        onEmojiClick={(emojiData) => {
+                          setNewMessage(prev => prev + emojiData.emoji);
+                        }}
+                        width={300}
+                        height={350}
+                        previewConfig={{ showPreview: false }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim() || loading.sending}
+                  className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading.sending ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary-foreground" />
+                  ) : (
+                    <Send size={20} />
+                  )}
+                </button>
+              </div>
+              {error.sending && (
+                <div className="mt-2 text-sm text-destructive">{error.sending}</div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Nouveau chat: Modal */}
+      {showNewChat && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-2xl p-6 border border-border/50 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Nouvelle conversation</h2>
+              <button
+                onClick={() => {
+                  setShowNewChat(false);
+                  setUserSearchQuery('');
+                  setSearchResults([]);
+                }}
+                className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Rechercher un utilisateur
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Nom d'utilisateur..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div className="max-h-60 overflow-y-auto">
+                {loading.searching ? (
+                  <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {searchResults.map(user => (
+                      <div
+                        key={user.id}
+                        onClick={() => startPrivateChat(user.id)}
+                        className="flex items-center gap-3 p-3 hover:bg-accent/30 rounded-lg cursor-pointer"
+                      >
+                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
+                          {user.photo ? <img src={user.photo} alt="Profile" className="rounded-full" /> : user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium">@{user.username}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {user.first_name} {user.last_name}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Boîte de dialogue de confirmation de suppression */}
       {showDeleteDialog && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-lg p-6 max-w-sm w-full">
+          <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-2xl p-6 border border-border/50 max-w-sm w-full">
             <h3 className="text-lg font-bold mb-4">Supprimer le message</h3>
             <p className="mb-6">Êtes-vous sûr de vouloir supprimer ce message ?</p>
             <div className="flex justify-end gap-2">
