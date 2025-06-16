@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AgriSmart 🌾
+
+AgriSmart est une plateforme web d’agriculture intelligente, développée avec [Next.js](https://nextjs.org), dont l’objectif est d’optimiser la production agricole au Bénin en facilitant la mise en relation entre agriculteurs et clients, tout en fournissant des outils communautaires et des ressources pédagogiques.
+
+## Fonctionnalités principales
+
+- 📦 Catalogue de produits agricoles en ligne
+- 📬 Messagerie privée entre utilisateurs (agriculteurs, clients, experts)
+- 🌍 Choix de lieu de livraison (hors logistique)
+- 🌤️ Données météorologiques locales intégrées
+- 🗣️ Forum communautaire pour échanger entre agriculteurs et experts
+- 📚 Blog avec articles et vidéos sur les bonnes pratiques agricoles
+
+---
 
 ## Getting Started
 
-First, run the development server:
+Ce projet utilise [Next.js](https://nextjs.org) et a été bootstrappé avec [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+### Installer les dépendances
+
+```bash
+npm install
+# ou
+yarn install
+# ou
+pnpm install
+```
+
+### Lancer le serveur de développement
 
 ```bash
 npm run dev
-# or
+# ou
 yarn dev
-# or
+# ou
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ 
+### Ouvre http://localhost:3000 dans ton navigateur pour voir le résultat.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Structure du projet
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+app/ – Pages et routes du projet (App Router)
 
-## Learn More
+components/ – Composants réutilisables (UI, cartes, formulaires, etc.)
 
-To learn more about Next.js, take a look at the following resources:
+lib/ – Fonctions utilitaires (API météo, gestion des messages, etc.)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+public/ – Ressources statiques (images, vidéos…)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+styles/ – Feuilles de style globales (ex: Tailwind)
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Technologies utilisées
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js
+
+React
+
+Tailwind CSS
+
+Axios
+
+Clerk ou Auth.js pour l’authentification (optionnel)
+
+MongoDB / Supabase / Firebase (selon la base choisie)
+
+
+### Déploiement
+Tu peux déployer ce projet sur Vercel, plateforme officielle de Next.js :
+
+👉 Déployer sur Vercel
+
+### En savoir plus
+Documentation Next.js
+
+Tutoriel interactif
+
+Tailwind CSS
+
+### Contribution
+Les contributions sont les bienvenues !
+
+Tu peux :
+
+- Créer une issue pour suggérer une amélioration
+- Proposer une pull request avec une nouvelle fonctionnalité ou une correction
+
+### Auteurs
+Lafia Sabi Gado & Nel Gbaguidi
+Projet réalisé dans le cadre d’un mémoire universitaire 💼
+
+Développé par une équipe passionnée d’agriculture et de technologie 🚜💻
+
