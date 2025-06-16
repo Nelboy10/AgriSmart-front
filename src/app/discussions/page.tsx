@@ -6,17 +6,17 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 
 // Chargement dynamique des composants avec gestion du dark mode
-const ForumView = dynamic(() => import('@/components/community/ForumView'), {
+const ForumView = dynamic(() => import('@/components/discussions/ForumView'), {
   loading: () => <LoadingView />,
   ssr: false
 });
 
-const ChatView = dynamic(() => import('@/components/community/ChatView'), {
+const ChatView = dynamic(() => import('@/components/discussions/ChatView'), {
   loading: () => <LoadingView />,
   ssr: false
 });
 
-const StatsView = dynamic(() => import('@/components/community/StatsView'), {
+const StatsView = dynamic(() => import('@/components/discussions/StatsView'), {
   loading: () => <LoadingView />,
   ssr: false
 });
