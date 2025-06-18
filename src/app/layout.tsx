@@ -3,8 +3,11 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
+import { AuthProvider } from '@/context/AuthContext'; 
 import { AuthInitializer } from '@/components/providers/AppWrapper';
 import { Toaster } from 'sonner'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
@@ -23,7 +26,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             <Navbar />
             <Toaster richColors position="top-right" />
-            <main className="flex-grow">{children}</main>
+            <AuthProvider>
+            <main className="flex-grow">
+              {children}</main>
+              <ToastContainer position="bottom-right" />
+            </AuthProvider>
             <Footer />
           </ThemeProvider>
       </body>
