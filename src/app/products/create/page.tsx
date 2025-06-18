@@ -21,15 +21,8 @@ export default function CreateProductPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
-  // Vérifier que l'utilisateur est un agriculteur ou admin
-  if (!user || (user.role !== 'farmer' && user.role !== 'admin')) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Accès refusé</h1>
-        <p>Seuls les agriculteurs peuvent créer des produits.</p>
-      </div>
-    );
-  }
+ 
+  
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

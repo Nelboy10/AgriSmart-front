@@ -17,6 +17,3 @@ export const PlusIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
-// Vous pouvez ajouter d'autres icônes ici
-// export const OtherIcon = ...

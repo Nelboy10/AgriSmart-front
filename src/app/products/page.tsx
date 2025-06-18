@@ -37,7 +37,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <h1 className="text-3xl font-bold">Nos Produits Agricoles</h1>
         
         {/* Bouton conditionnel */}
-        {isFarmerOrAdmin && (
+       
           <Link 
             href="/products/create" 
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
@@ -45,7 +45,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <PlusIcon className="w-5 h-5 mr-1" />
             Ajouter un produit
           </Link>
-        )}
+      
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
