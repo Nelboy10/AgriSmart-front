@@ -4,15 +4,13 @@ import OrderForm from '@/components/product/OrderForm';
 import { fetchProduct } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 
-interface ProductDetailPageProps {
-  params: {
-    id: string;
-  };
-}
+export type ParamsType = Promise<{ id: string }>;
 
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+export default async function ProductDetailPage({ params }: { params: ParamsType }) {
+  const { id } = await params;
+
   const token = await getToken();
-  const product = await fetchProduct(params.id, token ?? undefined);
+  const product = await fetchProduct(id, token ?? undefined);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -21,7 +19,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           <ProductDetail product={product} />
           
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Place Order</h2>
+            <h2 className="text-xl font-semibold mb-4">Passer une commande</h2>
             <OrderForm product={product} />
           </div>
         </div>
@@ -29,3 +27,5 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';
