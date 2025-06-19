@@ -8,12 +8,21 @@ import {
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  is_online: boolean;
+}
+
 interface Category {
   id: string;
   name: string;
   description: string;
   topics_count: number;
   last_activity: string;
+  creator: User | null;
+  creator_online: boolean;
 }
 
 interface Topic {
@@ -21,19 +30,19 @@ interface Topic {
   title: string;
   content: string;
   category: string;
-  author: { id: string; username: string };
+  author: User;
   is_pinned: boolean;
   is_locked: boolean;
   views_count: number;
   posts_count: number;
   created_at: string;
-  last_post?: { author: { username: string }; created_at: string };
+  last_post?: { author: User; created_at: string };
 }
 
 interface Post {
   id: string;
   content: string;
-  author: { id: string; username: string };
+  author: User;
   created_at: string;
   is_edited: boolean;
   likes_count: number;
@@ -535,7 +544,7 @@ export default function ForumView() {
       {/* Forum Header */}
       <div className="p-4 border-b border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Forum Communautaire</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Forum</h2>
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
@@ -547,7 +556,7 @@ export default function ForumView() {
                 className="pl-10 pr-4 py-2 bg-white/50 dark:bg-gray-800/50 border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary w-64"
               />
             </div>
-            {user?.is_online && (
+            {user ? (
               <button 
                 onClick={() => setShowNewCategory(true)}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 flex items-center gap-2"
@@ -555,6 +564,8 @@ export default function ForumView() {
                 <Plus size={18} />
                 <span>Nouvelle catégorie</span>
               </button>
+            ) : (
+              <div className="text-sm text-muted-foreground">Connectez-vous pour créer une catégorie</div>
             )}
           </div>
         </div>
@@ -576,33 +587,52 @@ export default function ForumView() {
 
         {!loading.categories && !error.categories && (
           <div className="grid gap-6">
-            {categories.map(category => (
-              <div
-                key={category.id}
-                onClick={() => setSelectedCategory(category)}
-                className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-6 border border-border/50 hover:border-primary/50 cursor-pointer transition-colors backdrop-blur-sm"
-              >
-                <div className="flex justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 text-2xl">
-                      🌾
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
-                      <p className="text-muted-foreground mb-3">{category.description}</p>
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        <span>{category.topics_count} discussions</span>
-                        <span>Dernière activité {formatTimeAgo(category.last_activity)}</span>
+            {categories.length > 0 ? (
+              categories.map(category => (
+                <div
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category)}
+                  className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-6 border border-border/50 hover:border-primary/50 cursor-pointer transition-colors backdrop-blur-sm"
+                >
+                  <div className="flex justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 text-2xl">
+                        🌾
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
+                        <p className="text-muted-foreground mb-3">{category.description}</p>
+                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                          <span>{category.topics_count} discussions</span>
+                          <span>Dernière activité {formatTimeAgo(category.last_activity)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-emerald-500 font-medium">Actif</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-emerald-500 font-medium">Actif</span>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-8 text-center border border-border/50">
+                <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                  <Hash className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium text-foreground mb-2">Aucune catégorie disponible</h3>
+                <p className="text-muted-foreground mb-6">Il n'y a pas encore de catégories de discussion disponibles.</p>
+                {user && (
+                  <button
+                    onClick={() => setShowNewCategory(true)}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 inline-flex items-center gap-2"
+                  >
+                    <Plus size={16} />
+                    <span>Créer une catégorie</span>
+                  </button>
+                )}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>

@@ -52,6 +52,14 @@ const ErrorView = ({ error, retry }: { error: Error; retry: () => void }) => (
   </div>
 );
 
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  topics_count: number;
+  last_activity: string;
+}
+
 export default function CommunityPage() {
   const { user, token, error: authError } = useAuthStore();
   const [activeView, setActiveView] = useState('forum');
@@ -66,7 +74,7 @@ export default function CommunityPage() {
       label: 'Forum',
       icon: Hash,
       component: ForumView,
-      badge: '12',
+      badge: "2",
       description: 'Discussions et questions'
     },
     {
@@ -74,7 +82,7 @@ export default function CommunityPage() {
       label: 'Messages',
       icon: MessageCircle,
       component: ChatView,
-      badge: "12",
+      badge: "3",
       description: 'Messages privés'
     },
     {

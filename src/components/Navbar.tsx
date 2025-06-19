@@ -48,7 +48,7 @@ const navigationLinks = [
     description: 'Discussions et échanges'
   },
   { 
-    href: '/catalogue', 
+    href: '/products', 
     label: 'Catalogue', 
     icon: Command,
     description: 'Catalogue'

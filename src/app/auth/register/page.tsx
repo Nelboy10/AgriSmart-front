@@ -36,7 +36,7 @@ export default function RegisterForm() {
     }
   
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/register/`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register/`, {
         method: 'POST',
         // Ne pas définir manuellement le Content-Type pour FormData
         // Le navigateur définira automatiquement le bon Content-Type avec la limite

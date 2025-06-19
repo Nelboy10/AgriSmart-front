@@ -362,7 +362,7 @@ export default function ChatView() {
     <div className="flex-1 flex bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/80 dark:to-gray-900">
       {/* Liste des threads - Toujours visible sur les grands écrans */}
       <div className={`w-full md:w-80 border-r border-border flex flex-col bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm ${selectedThread ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-border/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+        <div className="p-4 border-b border-border bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
           <div className="flex justify-between items-center mb-4 ">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Messages</h2>
             <button
@@ -399,85 +399,102 @@ export default function ChatView() {
 
           {!loading.threads && !error.threads && (
             <>
-              {threads
-                .filter(thread =>
-                  thread.participants.some(p =>
-                    p.username !== user?.username &&
-                    p.username.toLowerCase().includes(searchQuery.toLowerCase())
+              {threads.length > 0 ? (
+                threads
+                  .filter(thread =>
+                    thread.participants.some(p =>
+                      p.username !== user?.username &&
+                      p.username.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
                   )
-                )
-                .map(thread => {
-                  const otherUser = thread.participants.find(p => p.username !== user?.username);
-                  return (
-                    <div
-                      key={thread.id}
-                      onClick={() => setSelectedThread(thread)}
-                      className={`p-4 border-b border-border hover:bg-accent/50 cursor-pointer transition-colors relative overflow-hidden
-                        ${thread.unread_count > 0 ? 'bg-accent/20' : ''}
-                      `}
-                    >
-                      {/* Indicateur de message non lu */}
-                      {thread.unread_count > 0 && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
-                      )}
-                      <div className="flex items-start gap-3">
-                        <div className="relative">
-                          {thread.thread_type === 'group' ? (
-                            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                              <Users size={20} />
-                            </div>
-                          ) : (
-                            <div className="relative w-12 h-12">
-                              {thread.participants.find(p => p.username !== user?.username)?.photo ? (
-                                <img 
-                                  src={thread.participants.find(p => p.username !== user?.username)?.photo}
-                                  alt="Photo de profil"
-                                  className="w-full h-full rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
-                                  {thread.participants.find(p => p.username !== user?.username)?.username.charAt(0)}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {thread.participants.some(p => p.is_online && p.id !== user?.username) && (
-                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between mb-1">
-                            <h3 className="font-semibold truncate">
-                              {thread.thread_type === 'group'
-                                ? thread.title
-                                : otherUser?.username}
-                            </h3>
-                            <span className="text-xs text-muted-foreground">
-                              {formatTimeAgo(thread.updated_at)}
-                            </span>
+                  .map(thread => {
+                    const otherUser = thread.participants.find(p => p.username !== user?.username);
+                    return (
+                      <div
+                        key={thread.id}
+                        onClick={() => setSelectedThread(thread)}
+                        className={`p-4 border-b border-border hover:bg-accent/50 cursor-pointer transition-colors relative overflow-hidden
+                          ${thread.unread_count > 0 ? 'bg-accent/20' : ''}
+                        `}
+                      >
+                        {/* Indicateur de message non lu */}
+                        {thread.unread_count > 0 && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+                        )}
+                        <div className="flex items-start gap-3">
+                          <div className="relative">
+                            {thread.thread_type === 'group' ? (
+                              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                                <Users size={20} />
+                              </div>
+                            ) : (
+                              <div className="relative w-12 h-12">
+                                {thread.participants?.find?.(p => p.username !== user?.username)?.photo ? (
+                                  <img 
+                                    src={thread.participants?.find?.(p => p.username !== user?.username)?.photo || ''}
+                                    alt="Photo de profil"
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
+                                    {thread.participants?.find?.(p => p.username !== user?.username)?.username?.charAt(0) || '?'}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {thread.participants?.some?.(p => p.is_online && p.id !== user?.username) && (
+                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
+                            )}
                           </div>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {thread.last_message ? (
-                              thread.last_message.sender ? (
-                                `${thread.last_message.sender.username}: ${thread.last_message.content}`
-                              ) : (
-                                `Message: ${thread.last_message.content}`
-                              )
-                            ) : 'Aucun message'}
-                          </p>
-                          {thread.unread_count > 0 && (
-                            <div className="flex justify-between items-center mt-2">
-                              <span></span>
-                              <span className="bg-primary text-primary-foreground text-xs rounded-full px-2 py-1">
-                                {thread.unread_count}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between mb-1">
+                              <h3 className="font-semibold truncate">
+                                {thread.thread_type === 'group'
+                                  ? thread.title
+                                  : otherUser?.username}
+                              </h3>
+                              <span className="text-xs text-muted-foreground">
+                                {formatTimeAgo(thread.updated_at)}
                               </span>
                             </div>
-                          )}
+                            <p className="text-sm text-muted-foreground truncate">
+                              {thread.last_message ? (
+                                thread.last_message.sender ? (
+                                  `${thread.last_message.sender.username}: ${thread.last_message.content}`
+                                ) : (
+                                  `Message: ${thread.last_message.content}`
+                                )
+                              ) : 'Aucun message'}
+                            </p>
+                            {thread.unread_count > 0 && (
+                              <div className="flex justify-between items-center mt-2">
+                                <span></span>
+                                <span className="bg-primary text-primary-foreground text-xs rounded-full px-2 py-1">
+                                  {thread.unread_count}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <MessageCircle size={48} className="text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Aucune conversation</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Vous n'avez pas encore de conversation. Cliquez sur le bouton <Plus size={16} className="inline" /> pour en démarrer une nouvelle.
+                  </p>
+                  <button
+                    onClick={() => setShowNewChat(true)}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 inline-flex items-center gap-2"
+                  >
+                    <Plus size={16} />
+                    <span>Nouvelle conversation</span>
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -512,20 +529,20 @@ export default function ChatView() {
                       </div>
                     ) : (
                       <div className="relative w-10 h-10">
-                        {selectedThread.participants.find(p => p.username !== user?.username)?.photo ? (
+                        {selectedThread?.participants?.find?.(p => p.username !== user?.username)?.photo ? (
                           <img 
-                            src={selectedThread.participants.find(p => p.username !== user?.username)?.photo}
+                            src={selectedThread.participants.find(p => p.username !== user?.username)?.photo || ''}
                             alt="Photo de profil"
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-lg">
-                            {selectedThread.participants.find(p => p.username !== user?.username)?.username.charAt(0)}
+                            {selectedThread?.participants?.find?.(p => p.username !== user?.username)?.username?.charAt(0) || '?'}
                           </div>
                         )}
                       </div>
                     )}
-                    {selectedThread.participants.some(p => p.is_online && p.username !== user?.username) && (
+                    {selectedThread.participants?.some?.(p => p.is_online && p.username !== user?.username) && (
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
                     )}
                   </div>
@@ -533,12 +550,12 @@ export default function ChatView() {
                     <h3 className="font-semibold">
                       {selectedThread.thread_type === 'group'
                         ? selectedThread.title
-                        : selectedThread.participants.find(p => p.username !== user?.username)?.username}
+                        : selectedThread.participants?.find?.(p => p.username !== user?.username)?.username}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {selectedThread.thread_type === 'group'
-                        ? `${selectedThread.participants.length} membres`
-                        : selectedThread.participants.some(p => p.is_online && p.username !== user?.username)
+                        ? `${selectedThread.participants?.length} membres`
+                        : selectedThread.participants?.some?.(p => p.is_online && p.username !== user?.username)
                           ? 'En ligne'
                           : 'Hors ligne'}
                     </p>
