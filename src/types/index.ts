@@ -3,7 +3,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  role: 'admin' | 'farmer' | 'customer';
+  role: 'admin' | 'farmer' | 'client'|'expert';
 }
 
 export interface Product {
@@ -17,6 +17,7 @@ export interface Product {
   image: string;
   is_approved: boolean;
   created_at: string;
+  
 }
 
 export interface DeliverySchedule {
@@ -46,7 +47,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  role: 'admin' | 'farmer' | 'customer';
+  role: 'admin' | 'farmer' | 'client' | 'expert';
   profile_picture?: string | null;
   farm_name?: string;
   location?: string;

@@ -1,48 +1,22 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import ProductCard from '@/components/product/ProductCard';
 import SearchFilters from '@/components/product/SearchFilters';
 import { fetchProducts } from '@/lib/api';
-import { getToken } from '@/lib/auth';
-import { PlusIcon } from '@/components/icons';
+import AddProductButton from '@/components/product/AddProductButton';
 
 export type SearchParamsPromise = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParamsPromise }) {
   const resolvedParams = await searchParams;
 
-  const token = await getToken();
-  let userRole: string | undefined = undefined;
-
-  if (token) {
-    try {
-      const payload = JSON.parse(
-        Buffer.from(token.split('.')[1], 'base64').toString('utf-8')
-      );
-      userRole = payload.userRole;
-    } catch (e) {
-      userRole = undefined;
-    }
-  }
-
-  const products = await fetchProducts(resolvedParams, token ?? undefined);
-  const isFarmerOrAdmin = userRole === 'farmer' || userRole === 'admin';
+  const products = await fetchProducts(resolvedParams);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Nos Produits Agricoles</h1>
-
-        {/* Bouton visible uniquement pour les rôles autorisés */}
-        {isFarmerOrAdmin && (
-          <Link 
-            href="/products/create" 
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
-          >
-            <PlusIcon className="w-5 h-5 mr-1" />
-            Ajouter un produit
-          </Link>
-        )}
+        {/* Bouton client qui gère la logique de rôle */}
+        <AddProductButton />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
