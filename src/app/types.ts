@@ -12,6 +12,7 @@ export interface Product {
   seller: {
     id: number;
     username: string;
+    image:string | null; // Optional, can be null if no profile picture
     email: string;
     role: string;
   };

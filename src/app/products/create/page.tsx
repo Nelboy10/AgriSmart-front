@@ -223,5 +223,6 @@ export default function CreateProductPage() {
         </form>
       </div>
     </div>
+    
   );
 }

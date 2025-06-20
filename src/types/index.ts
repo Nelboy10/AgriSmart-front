@@ -31,6 +31,7 @@ export interface DeliverySchedule {
 
 export interface CreateOrderData {
   quantity: number;
+   client_notes?: string; 
   delivery_schedule_id: number;
 }
 // Ajoutez ces interfaces à votre fichier types/index.ts
@@ -76,4 +77,32 @@ export interface ProductFormData {
   unit?: string;
   harvest_date?: string;
   organic?: boolean;
+}
+ export interface Order {
+  id: number;
+  product: Product;
+  quantity: number;
+  status: string;
+  created_at: string;
+  client: User
+  farmer: User
+  delivery_schedule: string | null
+  
+}
+export interface OrderStatusUpdate {
+  id: number
+  previous_status: string
+  new_status: string
+  changed_by: User
+  notes: string
+  created_at: string
+}
+
+export interface DeliveryConfirmation {
+  id: number
+  order: number
+  confirmed_by_client: boolean
+  confirmed_by_farmer: boolean
+  client_confirmation_date?: string
+  farmer_confirmation_date?: string
 }

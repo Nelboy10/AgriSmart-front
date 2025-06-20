@@ -1,4 +1,5 @@
-import { Product, CreateOrderData } from '@/types';
+
+import { Product, CreateOrderData , Order } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 if (!API_URL) throw new Error('NEXT_PUBLIC_API_URL is not defined');
@@ -93,13 +94,7 @@ export const patchProduct = async (id: number, data: Partial<Product>, token: st
   return patch<Product>(`/api/products/${id}/`, data, token);
 };
 
-export const placeOrder = async (
-  productId: number,
-  data: CreateOrderData,
-  token: string
-): Promise<any> => {
-  return post<any>(`/api/products/${productId}/place_order/`, data, token);
-};
+
 export const fetchOrders = async (token?: string): Promise<any[]> => {
   return get<any[]>('/api/orders/', token);
 }
@@ -125,4 +120,29 @@ export const cancelOrder = async (orderId: number, token: string): Promise<any> 
 
 export const confirmDelivery = async (orderId: number, token: string): Promise<any> => {
   return post<any>(`/api/orders/${orderId}/confirm_delivery/`, {}, token);
+};
+// lib/api.ts
+export const placeOrder = async (
+  productId: number,
+  data: CreateOrderData,
+  token: string
+): Promise<Order> => {
+  const response = await fetch(`${API_URL}/api/products/${productId}/place_order/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      quantity: data.quantity,
+      client_notes: data.client_notes || null, // Envoyer les notes
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Erreur lors de la commande');
+  }
+
+  return response.json();
 };
