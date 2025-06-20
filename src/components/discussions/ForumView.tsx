@@ -2,16 +2,19 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
+import Link from 'next/link';
 import { 
-  Hash, Search, Bell, Plus, ArrowLeft, Pin, Lock, Eye, MessageCircle, 
+  Hash, Search, Users,Clock, Bell,Leaf, Plus, ArrowLeft, Pin, Lock, Eye, MessageCircle, 
   ThumbsUp, Reply, MoreVertical, X, Check, Paperclip, Smile 
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+
 
 interface User {
   id: number;
   username: string;
   email: string;
+  photo?: string;
   is_online: boolean;
 }
 
@@ -228,25 +231,32 @@ export default function ForumView() {
     return (
       <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
         {/* Topic Header */}
-        <div className="p-4 border-b border-border bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
+        <div className="p-2 sm:p-4 border-b border-border bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSelectedTopic(null)}
-              className="p-2 rounded-lg hover:bg-accent/50"
+              className="p-1 sm:p-2 rounded-lg hover:bg-accent/50 flex-shrink-0"
+              aria-label="Retour"
             >
-              <ArrowLeft className="text-muted-foreground" size={20} />
+              <ArrowLeft className="text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <div>
-              <div className="flex items-center gap-2">
-                {selectedTopic.is_pinned && <Pin size={16} className="text-emerald-500" />}
-                {selectedTopic.is_locked && <Lock size={16} className="text-destructive" />}
-                <h2 className="text-xl font-bold">{selectedTopic.title}</h2>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                {selectedTopic.is_pinned && <Pin size={14} className="text-emerald-500 flex-shrink-0" />}
+                {selectedTopic.is_locked && <Lock size={14} className="text-destructive flex-shrink-0" />}
+                <h2 className="text-base sm:text-xl font-bold truncate">{selectedTopic.title}</h2>
               </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>@{selectedTopic.author.username}</span>
+              <div className="flex items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
+                <span className="truncate">
+                  <Link href={`/profile/${selectedTopic.author.id}`} className="hover:underline">
+                    @{selectedTopic.author.username}
+                  </Link>
+                </span>
+                <span className="hidden sm:inline">•</span>
                 <span>{formatTimeAgo(selectedTopic.created_at)}</span>
+                <span className="hidden sm:inline">•</span>
                 <span className="flex items-center gap-1">
-                  <Eye size={14} />
+                  <Eye size={12} className="flex-shrink-0" />
                   <span>{selectedTopic.views_count} vues</span>
                 </span>
               </div>
@@ -255,7 +265,7 @@ export default function ForumView() {
         </div>
 
         {/* Posts List */}
-        <div className="flex-1 overflow-auto p-4 space-y-6">
+        <div className="flex-1 overflow-auto p-2 sm:p-4 space-y-3 sm:space-y-6">
           {loading.posts && (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
@@ -271,37 +281,57 @@ export default function ForumView() {
           {!loading.posts && !error.posts && (
             <>
               {/* Main Topic Post */}
-              <div className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-6 border border-border/50 backdrop-blur-sm">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
-                    {selectedTopic.author.username.charAt(0)}
+              <div className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-3 sm:p-6 border border-border/50 backdrop-blur-sm">
+                <div className="flex gap-2 sm:gap-4">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm sm:text-xl overflow-hidden flex-shrink-0">
+                    <Link href={`/profile/${selectedTopic.author.id}`} className="w-full h-full flex items-center justify-center">
+                      {selectedTopic.author.photo ? (
+                        <img src={selectedTopic.author.photo} alt={selectedTopic.author.username} className="w-full h-full object-cover" />
+                      ) : (
+                        selectedTopic.author.username.charAt(0)
+                      )}
+                    </Link>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-semibold">@{selectedTopic.author.username}</span>
-                      <span className="text-sm text-muted-foreground">{formatTimeAgo(selectedTopic.created_at)}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
+                      <span className="font-semibold text-sm sm:text-base">
+                        <Link href={`/profile/${selectedTopic.author.id}`} className="hover:underline">
+                          @{selectedTopic.author.username}
+                        </Link>
+                      </span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">{formatTimeAgo(selectedTopic.created_at)}</span>
                     </div>
-                    <p className="whitespace-pre-line">{selectedTopic.content}</p>
+                    <p className="whitespace-pre-line text-sm sm:text-base">{selectedTopic.content}</p>
                   </div>
                 </div>
               </div>
 
               {/* Replies */}
               {posts.map(post => (
-                <div key={post.id} className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-6 border border-border/50 backdrop-blur-sm">
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-secondary-foreground text-xl">
-                      {post.author.username.charAt(0)}
+                <div key={post.id} className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-3 sm:p-6 border border-border/50 backdrop-blur-sm">
+                  <div className="flex gap-2 sm:gap-4">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-secondary rounded-full flex items-center justify-center text-secondary-foreground text-sm sm:text-xl overflow-hidden flex-shrink-0">
+                      <Link href={`/profile/${post.author.id}`} className="w-full h-full flex items-center justify-center">
+                        {post.author.photo ? (
+                          <img src={post.author.photo} alt={post.author.username} className="w-full h-full object-cover" />
+                        ) : (
+                          post.author.username.charAt(0)
+                        )}
+                      </Link>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-semibold">@{post.author.username}</span>
-                        <span className="text-sm text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
+                        <span className="font-semibold text-sm sm:text-base">
+                          <Link href={`/profile/${post.author.id}`} className="hover:underline">
+                            @{post.author.username}
+                          </Link>
+                        </span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">
                           {formatTimeAgo(post.created_at)}
                           {post.is_edited && <span className="text-xs italic ml-2">(modifié)</span>}
                         </span>
                       </div>
-                      <p className="whitespace-pre-line">{post.content}</p>
+                      <p className="whitespace-pre-line text-sm sm:text-base">{post.content}</p>
                       <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/50">
                         <button 
                           onClick={() => toggleLike(post.id)}
@@ -325,18 +355,24 @@ export default function ForumView() {
 
         {/* New Post Form */}
         {!selectedTopic.is_locked && (
-          <div className="p-4 border-t border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
-            <div className="flex gap-4">
-              <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-accent-foreground">
-                {user?.username.charAt(0)}
+          <div className="p-2 sm:p-4 border-t border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+            <div className="flex gap-2 sm:gap-4">
+              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-accent rounded-full flex items-center justify-center text-accent-foreground text-sm sm:text-xl overflow-hidden flex-shrink-0">
+                <Link href={`/profile/${user?.id}`} className="w-full h-full flex items-center justify-center">
+                  {user?.photo ? (
+                    <img src={user.photo} alt={user.username} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.username.charAt(0)
+                  )}
+                </Link>
               </div>
-              <div className="flex-1 relative">
+              <div className="min-w-0 flex-1 relative">
                 <textarea
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
                   placeholder="Écrivez votre réponse..."
                   rows={3}
-                  className="w-full bg-input border border-border/50 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                  className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
                 />
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center gap-2">
@@ -389,80 +425,92 @@ export default function ForumView() {
     );
   }
 
-  if (selectedCategory) {
+   // Liste des topics dans une catégorie
+   if (selectedCategory) {
     return (
-      <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-        {/* Category Header */}
-        <div className="p-4 border-b border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className="p-2 rounded-lg hover:bg-accent/50"
-              >
-                <ArrowLeft className="text-muted-foreground" size={20} />
-              </button>
-              <div>
-                <h2 className="text-xl font-bold">{selectedCategory.name}</h2>
-                <p className="text-muted-foreground">{selectedCategory.description}</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setShowNewTopic(true)}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 flex items-center gap-2"
+      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
-              <Plus size={18} />
-              <span>Nouveau sujet</span>
+              <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
             </button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{selectedCategory.name}</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{selectedCategory.description}</p>
+            </div>
           </div>
+          <button 
+            onClick={() => setShowNewTopic(true)}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Nouveau sujet</span>
+          </button>
         </div>
 
-        {/* Topics List */}
-        <div className="flex-1 overflow-auto p-4">
+        {/* Liste des topics */}
+        <div className="flex-1 overflow-y-auto p-4">
           {loading.topics && (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
-            </div>
-          )}
-
-          {error.topics && (
-            <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
-              {error.topics}
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
             </div>
           )}
 
           {!loading.topics && !error.topics && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {topics.map(topic => (
                 <div
                   key={topic.id}
                   onClick={() => setSelectedTopic(topic)}
-                  className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-4 border border-border/50 hover:border-primary/50 cursor-pointer transition-colors backdrop-blur-sm"
+                  className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 cursor-pointer transition-all duration-200 hover:shadow-md"
                 >
-                  <div className="flex justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {topic.is_pinned && <Pin size={16} className="text-emerald-500" />}
-                        {topic.is_locked && <Lock size={16} className="text-destructive" />}
-                        <h3 className="font-semibold hover:text-primary">{topic.title}</h3>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden shrink-0">
+                      {topic.author.photo ? (
+                        <img src={topic.author.photo} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        topic.author.username.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {topic.is_pinned && <Pin size={16} className="text-amber-500" />}
+                        {topic.is_locked && <Lock size={16} className="text-red-500" />}
+                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                          {topic.title}
+                        </h3>
                       </div>
-                      <p className="text-muted-foreground line-clamp-2 mb-3">{topic.content}</p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>@{topic.author.username}</span>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-2">
+                        {topic.content}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                         <span className="flex items-center gap-1">
-                          <Eye size={14} />
-                          <span>{topic.views_count}</span>
+                          <Users size={12} />
+                          @{topic.author.username}
                         </span>
                         <span className="flex items-center gap-1">
-                          <MessageCircle size={14} />
-                          <span>{topic.posts_count}</span>
+                          <Eye size={12} />
+                          {topic.views_count}
                         </span>
-                        <span>{formatTimeAgo(topic.created_at)}</span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle size={12} />
+                          {topic.posts_count}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={12} />
+                          {formatTimeAgo(topic.created_at)}
+                        </span>
                       </div>
                     </div>
+                    
                     {topic.last_post && (
-                      <div className="text-right text-sm text-muted-foreground">
-                        <p>Dernier message par</p>
+                      <div className="text-right text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
+                        <p>Dernier message</p>
                         <p className="font-medium">@{topic.last_post.author.username}</p>
                         <p>{formatTimeAgo(topic.last_post.created_at)}</p>
                       </div>
@@ -473,6 +521,7 @@ export default function ForumView() {
             </div>
           )}
         </div>
+
 
         {/* New Topic Modal */}
         {showNewTopic && (
@@ -540,92 +589,114 @@ export default function ForumView() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-      {/* Forum Header */}
-      <div className="p-4 border-b border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Forum</h2>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-white/50 dark:bg-gray-800/50 border border-border/50 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary w-64"
-              />
-            </div>
-            {user ? (
-              <button 
-                onClick={() => setShowNewCategory(true)}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 flex items-center gap-2"
-              >
-                <Plus size={18} />
-                <span>Nouvelle catégorie</span>
-              </button>
-            ) : (
-              <div className="text-sm text-muted-foreground">Connectez-vous pour créer une catégorie</div>
-            )}
-          </div>
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-800/30">
+    {/* Header */}
+    <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-600 rounded-xl flex items-center justify-center">
+          <MessageCircle className="text-white" size={20} />
         </div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Forum</h1>
       </div>
+      
+      <div className="flex items-center gap-4">
+        <div className="relative hidden sm:block">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-full text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 w-64 transition-colors"
+          />
+        </div>
+        {user && (
+          <button 
+            onClick={() => setShowNewCategory(true)}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Nouvelle catégorie</span>
+          </button>
+        )}
+      </div>
+    </div>
 
-      {/* Categories List */}
-      <div className="flex-1 overflow-auto p-4">
+    {/* Categories List */}
+    <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-800/30">
         {loading.categories && (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-emerald-500" />
           </div>
         )}
 
         {error.categories && (
-          <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
+          <div className="mx-4 mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-3 rounded-lg text-sm">
             {error.categories}
           </div>
         )}
 
         {!loading.categories && !error.categories && (
-          <div className="grid gap-6">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {categories.length > 0 ? (
               categories.map(category => (
                 <div
                   key={category.id}
                   onClick={() => setSelectedCategory(category)}
-                  className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-6 border border-border/50 hover:border-primary/50 cursor-pointer transition-colors backdrop-blur-sm"
+                  className="bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer transition-colors active:bg-gray-100 dark:active:bg-gray-700/50"
                 >
-                  <div className="flex justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 text-2xl">
-                        🌾
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
-                        <p className="text-muted-foreground mb-3">{category.description}</p>
-                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                          <span>{category.topics_count} discussions</span>
-                          <span>Dernière activité {formatTimeAgo(category.last_activity)}</span>
-                        </div>
+                  <div className="flex items-center px-4 py-6">
+                    {/* Avatar/Icon */}
+                    <div className="flex-shrink-0 mr-3">
+                      <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
+                        <Leaf className="h-6 w-6 text-white" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-emerald-500 font-medium">Actif</span>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0 mr-3">
+                          <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {category.name}
+                          </h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                            {category.description}
+                          </p>
+                          <div className="flex items-center mt-1 text-xs text-gray-400 dark:text-gray-500">
+                            <span>{category.topics_count} discussions</span>
+                          </div>
+                        </div>
+
+                        {/* Right side info */}
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          <span className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                            {formatTimeAgo(category.last_activity)}
+                          </span>
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="bg-white/90 dark:bg-gray-900/90 rounded-2xl p-8 text-center border border-border/50">
-                <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                  <Hash className="w-8 h-8 text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                  <Hash className="w-10 h-10 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">Aucune catégorie disponible</h3>
-                <p className="text-muted-foreground mb-6">Il n'y a pas encore de catégories de discussion disponibles.</p>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 text-center">
+                  Aucune catégorie disponible
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center mb-6 max-w-sm">
+                  Il n'y a pas encore de catégories de discussion disponibles.
+                </p>
                 {user && (
                   <button
                     onClick={() => setShowNewCategory(true)}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 inline-flex items-center gap-2"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                   >
                     <Plus size={16} />
                     <span>Créer une catégorie</span>

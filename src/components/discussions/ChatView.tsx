@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
+import Link from 'next/link';
 import {
   MessageCircle, Plus, Search, ArrowLeft, Send, Paperclip,
   MoreVertical, User, Users, X, Check, Smile, Edit2, Trash2
@@ -430,15 +431,19 @@ export default function ChatView() {
                             ) : (
                               <div className="relative w-12 h-12">
                                 {thread.participants?.find?.(p => p.username !== user?.username)?.photo ? (
-                                  <img 
-                                    src={thread.participants?.find?.(p => p.username !== user?.username)?.photo || ''}
-                                    alt="Photo de profil"
-                                    className="w-full h-full rounded-full object-cover"
-                                  />
+                                  <Link href={`/profile/${thread.participants?.find?.(p => p.username !== user?.username)?.id}`} className="cursor-pointer">
+                                    <img 
+                                      src={thread.participants?.find?.(p => p.username !== user?.username)?.photo || ''}
+                                      alt="Photo de profil"
+                                      className="w-full h-full rounded-full object-cover"
+                                    />
+                                  </Link>
                                 ) : (
-                                  <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
-                                    {thread.participants?.find?.(p => p.username !== user?.username)?.username?.charAt(0) || '?'}
-                                  </div>
+                                  <Link href={`/profile/${thread.participants?.find?.(p => p.username !== user?.username)?.id}`} className="cursor-pointer">
+                                    <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xl">
+                                      {thread.participants?.find?.(p => p.username !== user?.username)?.username?.charAt(0) || '?'}
+                                    </div>
+                                  </Link>
                                 )}
                               </div>
                             )}
@@ -506,7 +511,7 @@ export default function ChatView() {
           <div className="flex-1 items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 hidden md:flex">
             <div className="text-center p-8">
               <MessageCircle size={48} className="text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Sélectionnez une conversation</h3>
+              <h3 className="text-lg font-bold mb-2">Sélectionnez une conversation</h3>
               <p className="text-muted-foreground">Choisissez une conversation existante ou créez-en une nouvelle</p>
             </div>
           </div>
@@ -530,15 +535,19 @@ export default function ChatView() {
                     ) : (
                       <div className="relative w-10 h-10">
                         {selectedThread?.participants?.find?.(p => p.username !== user?.username)?.photo ? (
-                          <img 
-                            src={selectedThread.participants.find(p => p.username !== user?.username)?.photo || ''}
-                            alt="Photo de profil"
-                            className="w-full h-full rounded-full object-cover"
-                          />
+                          <Link href={`/profile/${selectedThread?.participants?.find?.(p => p.username !== user?.username)?.id}`} className="cursor-pointer">
+                            <img 
+                              src={selectedThread.participants.find(p => p.username !== user?.username)?.photo || ''}
+                              alt="Photo de profil"
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          </Link>
                         ) : (
-                          <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-lg">
-                            {selectedThread?.participants?.find?.(p => p.username !== user?.username)?.username?.charAt(0) || '?'}
-                          </div>
+                          <Link href={`/profile/${selectedThread?.participants?.find?.(p => p.username !== user?.username)?.id}`} className="cursor-pointer">
+                            <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-primary-foreground text-lg">
+                              {selectedThread?.participants?.find?.(p => p.username !== user?.username)?.username?.charAt(0) || '?'}
+                            </div>
+                          </Link>
                         )}
                       </div>
                     )}
@@ -590,9 +599,11 @@ export default function ChatView() {
                     >
                       <div className={`flex gap-2 max-w-xs lg:max-w-md ${message.sender.username === user?.username ? 'flex-row-reverse' : ''}`}>
                         {message.message_type !== 'system' && (
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-secondary text-secondary-foreground">
-                            {message.sender.username.charAt(0)}
-                          </div>
+                          <Link href={`/profile/${message.sender.id}`} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-secondary text-secondary-foreground">
+                              {message.sender.username.charAt(0)}
+                            </div>
+                          </Link>
                         )}
                         <div className={`rounded-2xl px-4 py-2 ${
                           message.sender.username === user?.username

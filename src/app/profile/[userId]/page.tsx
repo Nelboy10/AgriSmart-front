@@ -261,7 +261,7 @@ const ProfilePage = () => {
 
   const handleSendMessage = () => {
     // Rediriger vers la page de messages avec cet utilisateur
-    router.push(`/messages?user=${profileUserId}`);
+    router.push(`/discussions?user=${profileUserId}`);
   };
 
   const getRoleColor = (role: string) => {
