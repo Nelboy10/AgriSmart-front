@@ -1,5 +1,32 @@
 import { Order } from '@/types';
 
+
+
+
+
+export const canCancelOrder = (order: Order, userId: number) => {
+  return order.client.id === userId && 
+         ['pending', 'approved'].includes(order.status);
+};
+
+export const canApproveOrRejectOrder = (order: Order, userId: number, role: string) => {
+  return (order.farmer.id === userId || role === 'admin') && 
+         order.status === 'pending';
+};
+
+export const canConfirmDelivery = (order: Order, userId: number) => {
+  return (order.client.id === userId || order.farmer.id === userId) && 
+         order.status === 'approved';
+};
+
+
+
+// utils/helpers.ts
+export const getDayOfWeekName = (dayOfWeek: number): string => {
+  const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  return days[dayOfWeek] || 'Jour inconnu';
+};
+
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('fr-FR', {
@@ -20,19 +47,4 @@ export const getStatusColor = (status: string) => {
     case 'delivered': return 'bg-blue-100 text-blue-800';
     default: return 'bg-gray-100 text-gray-800';
   }
-};
-
-export const canCancelOrder = (order: Order, userId: number) => {
-  return order.client.id === userId && 
-         ['pending', 'approved'].includes(order.status);
-};
-
-export const canApproveOrRejectOrder = (order: Order, userId: number, role: string) => {
-  return (order.farmer.id === userId || role === 'admin') && 
-         order.status === 'pending';
-};
-
-export const canConfirmDelivery = (order: Order, userId: number) => {
-  return (order.client.id === userId || order.farmer.id === userId) && 
-         order.status === 'approved';
 };

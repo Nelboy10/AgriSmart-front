@@ -1,5 +1,13 @@
-
-import { Product, CreateOrderData , Order } from '@/types';
+// lib/api.ts
+import { 
+  Product, 
+  CreateOrderData, 
+  Order as OrderType, 
+  OrderStatusUpdate, 
+  DeliveryConfirmation, 
+  ProductFormData,
+  User
+} from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 if (!API_URL) throw new Error('NEXT_PUBLIC_API_URL is not defined');
@@ -19,20 +27,19 @@ const getAuthHeaders = (token?: string) => ({
 const handleResponse = async (res: Response) => {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    const message = errorData?.detail || errorData?.message || 'Erreur serveur';
+    const message = errorData?.detail || errorData?.message || errorData?.error || 'Erreur serveur';
     throw new Error(message);
   }
   return res.json();
 };
 
-// Helpers génériques (facultatifs mais utiles si tu veux simplifier plus tard)
+// Helpers génériques
 const get = async <T>(path: string, token?: string): Promise<T> => {
   const res = await fetch(`${API_URL}${path}`, {
     headers: getAuthHeaders(token),
   });
   return handleResponse(res);
 };
-
 
 const post = async <T>(path: string, body: any, token?: string): Promise<T> => {
   const res = await fetch(`${API_URL}${path}`, {
@@ -42,6 +49,15 @@ const post = async <T>(path: string, body: any, token?: string): Promise<T> => {
       ...getAuthHeaders(token),
     },
     body: JSON.stringify(body),
+  });
+  return handleResponse(res);
+};
+
+const postForm = async <T>(path: string, formData: FormData, token: string): Promise<T> => {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: getAuthHeaders(token),
+    body: formData,
   });
   return handleResponse(res);
 };
@@ -67,6 +83,15 @@ const patch = async <T>(path: string, data: Partial<T>, token: string): Promise<
   return handleResponse(res);
 };
 
+const del = async <T>(path: string, token: string): Promise<T> => {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(token),
+  });
+  return handleResponse(res);
+};
+
+// API Produits
 export const fetchProducts = async (params: Record<string, any> = {}, token?: string): Promise<Product[]> => {
   const cleanParams = sanitizeParams(params);
   const query = new URLSearchParams(cleanParams).toString();
@@ -78,12 +103,7 @@ export const fetchProduct = async (id: string, token?: string): Promise<Product>
 };
 
 export const createProduct = async (data: FormData, token: string): Promise<Product> => {
-  const res = await fetch(`${API_URL}/api/products/`, {
-    method: 'POST',
-    headers: getAuthHeaders(token), // Ne pas inclure 'Content-Type' pour FormData
-    body: data,
-  });
-  return handleResponse(res);
+  return postForm<Product>('/api/products/', data, token);
 };
 
 export const updateProduct = async (id: number, data: FormData, token: string): Promise<Product> => {
@@ -94,55 +114,122 @@ export const patchProduct = async (id: number, data: Partial<Product>, token: st
   return patch<Product>(`/api/products/${id}/`, data, token);
 };
 
-
-export const fetchOrders = async (token?: string): Promise<any[]> => {
-  return get<any[]>('/api/orders/', token);
-}
-
-export const fetchOrderDetail = async (id: string, token?: string): Promise<any> => {
-  return get<any>(`/api/orders/${id}/`, token);
-}
-export const fetchDeliverySchedules = async (farmerId: number, token?: string): Promise<any[]> => {
-  return get<any[]>(`/api/delivery-schedules/?farmer=${farmerId}`, token);
-};
-// Actions pour les commandes
-export const approveOrder = async (orderId: number, token: string, notes?: string): Promise<any> => {
-  return post<any>(`/api/orders/${orderId}/approve/`, { notes }, token);
+export const deleteProduct = async (id: number, token: string): Promise<void> => {
+  return del<void>(`/api/products/${id}/`, token);
 };
 
-export const rejectOrder = async (orderId: number, token: string, reason: string, notes?: string): Promise<any> => {
-  return post<any>(`/api/orders/${orderId}/reject/`, { reason, notes }, token);
+// API Commandes - Utilisation de "OrderType" pour éviter les conflits de noms
+export const fetchOrders = async (token?: string): Promise<OrderType[]> => {
+  return get<OrderType[]>('/api/orders/', token);
 };
 
-export const cancelOrder = async (orderId: number, token: string): Promise<any> => {
-  return post<any>(`/api/orders/${orderId}/cancel/`, {}, token);
+export const fetchOrderDetail = async (id: string, token?: string): Promise<OrderType> => {
+  return get<OrderType>(`/api/orders/${id}/`, token);
 };
 
-export const confirmDelivery = async (orderId: number, token: string): Promise<any> => {
-  return post<any>(`/api/orders/${orderId}/confirm_delivery/`, {}, token);
+export const fetchOrderStatusHistory = async (orderId: number, token: string): Promise<OrderStatusUpdate[]> => {
+  return get<OrderStatusUpdate[]>(`/api/orders/${orderId}/status_history/`, token);
 };
-// lib/api.ts
+
+export const fetchDeliveryConfirmation = async (orderId: number, token: string): Promise<DeliveryConfirmation> => {
+  return get<DeliveryConfirmation>(`/api/orders/${orderId}/delivery_confirmation/`, token);
+};
+
 export const placeOrder = async (
   productId: number,
   data: CreateOrderData,
   token: string
-): Promise<Order> => {
-  const response = await fetch(`${API_URL}/api/products/${productId}/place_order/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      quantity: data.quantity,
-      client_notes: data.client_notes || null, // Envoyer les notes
-    }),
+): Promise<OrderType> => {
+  return post<OrderType>(`/api/products/${productId}/place_order/`, data, token);
+};
+
+export const approveOrder = async (orderId: number, token: string, notes?: string): Promise<OrderType> => {
+  return post<OrderType>(`/api/orders/${orderId}/approve/`, { notes }, token);
+};
+
+export const rejectOrder = async (orderId: number, token: string, reason: string, notes?: string): Promise<OrderType> => {
+  return post<OrderType>(`/api/orders/${orderId}/reject/`, { reason, notes }, token);
+};
+
+export const cancelOrder = async (orderId: number, token: string): Promise<OrderType> => {
+  return post<OrderType>(`/api/orders/${orderId}/cancel/`, {}, token);
+};
+
+export const confirmDelivery = async (orderId: number, token: string): Promise<OrderType> => {
+  return post<OrderType>(`/api/orders/${orderId}/confirm_delivery/`, {}, token);
+};
+
+// API Livraisons
+export const fetchDeliverySchedules = async (farmerId: number, token?: string): Promise<any[]> => {
+  return get<any[]>(`/api/delivery-schedules/?farmer=${farmerId}`, token);
+};
+
+// API Utilisateurs
+export const fetchCurrentUser = async (token: string): Promise<User> => {
+  return get<User>('/api/auth/users/me/', token);
+};
+
+export const updateUserProfile = async (data: Partial<User>, token: string): Promise<User> => {
+  return patch<User>('/api/auth/users/me/', data, token);
+};
+
+export const updateUserProfilePicture = async (formData: FormData, token: string): Promise<User> => {
+  const res = await fetch(`${API_URL}/api/auth/users/me/`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(token),
+    body: formData,
   });
+  return handleResponse(res);
+};
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Erreur lors de la commande');
+// API Authentification
+export const login = async (credentials: { username: string; password: string }) => {
+  const res = await fetch(`${API_URL}/api/auth/jwt/create/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail || 'Identifiants incorrects');
   }
+  
+  return res.json();
+};
 
-  return response.json();
+export const register = async (data: { 
+  username: string; 
+  email: string; 
+  password: string;
+  role: string;
+  farm_name?: string;
+  location?: string;
+}) => {
+  const res = await fetch(`${API_URL}/api/auth/register/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    const errorMessage = Object.entries(errorData)
+      .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+      .join('\n');
+    throw new Error(errorMessage || "Échec de l'inscription");
+  }
+  
+  return res.json();
+};
+
+
+
+// API Autres ressources
+export const fetchCategories = async (token?: string): Promise<any[]> => {
+  return get<any[]>('/api/categories/', token);
+};
+
+export const fetchFarmers = async (token?: string): Promise<User[]> => {
+  return get<User[]>('/api/users/?role=farmer', token);
 };
