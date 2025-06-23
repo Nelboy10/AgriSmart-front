@@ -11,14 +11,28 @@ import {
   Sun,
   Moon
 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
+import axios from 'axios';
+
+interface WeatherData {
+  location: string;
+  temperature: number;
+  condition: string;
+  windspeed: number;
+  humidity: number;
+  precipitation: number;
+  is_day: boolean;
+  date: string;
+}
 
 export default function WeatherWidget() {
-  const [weather, setWeather] = useState<any>(null)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [location, setLocation] = useState('')
   const [showInput, setShowInput] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const { user,token } = useAuthStore()
 
   useEffect(() => {
     // Vérifier le mode sombre sauvegardé
@@ -26,8 +40,15 @@ export default function WeatherWidget() {
     if (savedMode) {
       setIsDarkMode(JSON.parse(savedMode))
     }
-    getUserCityAndFetchWeather()
-  }, [])
+    
+    // Utiliser la localisation de l'utilisateur si disponible
+    if (user?.localisation) {
+      setLocation(user.localisation)
+      fetchWeather(user.localisation)
+    } else {
+      getUserCityAndFetchWeather()
+    }
+  }, [user])
 
   useEffect(() => {
     // Sauvegarder la préférence de mode
@@ -80,30 +101,54 @@ export default function WeatherWidget() {
     setLoading(true)
     setError('')
     try {
-      // Simulation des données météo pour la démo
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const data = {
-        location: city,
-        temperature: Math.round(Math.random() * 30 + 5),
-        condition: ['Ensoleillé', 'Nuageux', 'Pluvieux', 'Partiellement nuageux'][Math.floor(Math.random() * 4)],
-        windspeed: Math.round(Math.random() * 20 + 5),
-        humidity: Math.round(Math.random() * 40 + 40),
-        precipitation: Math.round(Math.random() * 10),
-        is_day: new Date().getHours() > 6 && new Date().getHours() < 20,
-        date: new Date().toISOString()
+      if (!token) throw new Error('Non authentifié')
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/live_weather/?location=${encodeURIComponent(city)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      // Pas besoin de vérifier response.data.ok avec Axios
+      // car les erreurs HTTP sont gérées dans le catch
+      const data = response.data
+      
+      // Formatage des données pour correspondre à l'interface WeatherData
+      const weatherData: WeatherData = {
+        location: data.location || city,
+        temperature: Math.round(data.temperature || 0),
+        condition: data.condition || 'Inconnu',
+        windspeed: data.wind_speed || data.windspeed || 0,
+        humidity: data.humidity || 0,
+        precipitation: data.precipitation || 0,
+        is_day: data.is_day || false,
+        date: data.date || new Date().toISOString()
       }
-      setWeather(data)
-      setLocation(city)
+      
+      setWeather(weatherData)
+      setLocation(weatherData.location)
     } catch (err) {
-      setError('Impossible de récupérer la météo pour cette ville.')
+      console.error('Erreur fetchWeather:', err)
+      if (axios.isAxiosError(err)) {
+        // Gestion des erreurs spécifiques à Axios
+        const errorMessage = err.response?.data?.detail || err.message
+        setError(`Erreur: ${errorMessage}`)
+      } else {
+        setError('Impossible de récupérer la météo pour cette ville.')
+      }
       setShowInput(true)
     } finally {
       setLoading(false)
     }
   }
 
-  function handleSubmit(e: any) {
-    e.preventDefault?.()
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
     if (location.trim()) {
       fetchWeather(location.trim())
       setShowInput(false)
@@ -159,7 +204,7 @@ export default function WeatherWidget() {
       <div className="flex items-center justify-between">
         <div className={`flex items-center gap-2 ${themeClasses.header} font-bold text-lg`}>
           <CloudSun className="text-xl" />
-          <span>Météo Agricole</span>
+          <span>Votre Météo</span>
         </div>
         
         <div className="flex items-center gap-2">

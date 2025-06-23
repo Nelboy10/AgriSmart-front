@@ -16,40 +16,47 @@ export default function LoginForm() {
   const [focusedField, setFocusedField] = useState('')
   const { login } = useAuthStore()
 
+  const getTranslatedErrorMessage = (error: unknown): string => {
+    if (!(error instanceof Error)) return 'Une erreur inconnue est survenue';
+    
+    const errorMessage = error.message.toLowerCase();
+    
+    // Traduction des erreurs courantes de Django
+    const errorTranslations: Record<string, string> = {
+      'no active account found with the given credentials': 'Identifiants incorrects. Veuillez réessayer.',
+      'unable to log in with provided credentials': 'Impossible de se connecter avec ces identifiants.',
+      'this field may not be blank': 'Tous les champs sont obligatoires.',
+      'invalid token': 'Session expirée. Veuillez vous reconnecter.',
+      'token is invalid or expired': 'Session expirée. Veuillez vous reconnecter.',
+      'user is not active': 'Ce compte est désactivé. Veuillez contacter un administrateur.',
+      'too many login attempts': 'Trop de tentatives de connexion. Veuillez réessayer plus tard.'
+    };
+
+    // Cherche une correspondance dans les traductions
+    const translatedError = Object.entries(errorTranslations).find(([key]) => 
+      errorMessage.includes(key.toLowerCase())
+    );
+
+    return translatedError 
+      ? `❌ ${translatedError[1]}` 
+      : `❌ Erreur de connexion: ${errorMessage}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
     
-    
     try {
-      // Utilisez la méthode login du store plutôt que de faire la requête manuellement
+      // Utilisation de la méthode login du store
       await login({ username, password })
-      router.push('/home')
+      // La redirection est gérée par le composant parent ou le layout
+      // après une authentification réussie
+      window.location.href = '/home'
     } catch (error) {
-      setMessage(`❌ Erreur: ${error instanceof Error ? error.message : 'Échec de la connexion'}`)
+      setMessage(getTranslatedErrorMessage(error));
     } finally {
       setLoading(false)
-    }
-    
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-    })
-
-    const data = await res.json()
-    setLoading(false)
-
-    if (res.status === 200) {
-      // Stocke les tokens
-      sessionStorage.setItem('access', data.access)
-      localStorage.setItem('refresh', data.refresh)
-      router.push('/home')
-    } else {
-      setMessage(`❌ Erreur: ${data.detail || JSON.stringify(data)}`)
     }
   }
 
@@ -132,54 +139,58 @@ export default function LoginForm() {
               </div>
             </div>
 
-            {/* Submit button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full bg-gradient-to-r from-green-600 to-amber-500 text-white font-semibold py-3 rounded-2xl hover:from-green-500 hover:to-amber-400 transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-green-500/25"
-            >
-              <span className="flex items-center justify-center gap-2">
+            <div className="flex flex-col items-center justify-between gap-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full flex items-center justify-center px-6 py-3 rounded-2xl font-medium transition-all duration-200 ${
+                  loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-600 to-amber-500 hover:from-green-700 hover:to-amber-600 transform hover:-translate-y-0.5 shadow-lg'
+                }`}
+              >
                 {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Connexion...
-                  </>
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Connexion en cours...
+                  </span>
                 ) : (
-                  <>
+                  <span className="flex items-center">
                     Se connecter
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                  </>
+                    <ArrowRight className="ml-2" size={18} />
+                  </span>
                 )}
-              </span>
-            </button>
+              </button>
 
-            {/* Links */}
-            <div className="text-center text-sm text-gray-300 space-y-2">
-              <div>
-                <span>Pas encore de compte ? </span>
-                <Link href="/auth/register" className="text-transparent bg-gradient-to-r from-green-400 to-amber-400 bg-clip-text font-semibold hover:from-green-300 hover:to-amber-300 transition-all duration-200">
+              <p className="text-sm text-gray-300 text-center">
+                Pas encore de compte ?{' '}
+                <Link href="/auth/register" className="text-green-300 hover:text-green-200 font-medium transition-colors">
                   S'inscrire
                 </Link>
-              </div>
-              <div>
-                <span>Mot de passe oublié ? </span>
-                <Link href="/auth/password/reset" className="text-transparent bg-gradient-to-r from-green-400 to-amber-400 bg-clip-text font-semibold hover:from-green-300 hover:to-amber-300 transition-all duration-200">
-                  Réinitialiser
-                </Link>
-              </div>
+              </p>
+              
+              <Link 
+                href="/forgot-password" 
+                className="text-sm text-amber-300 hover:text-amber-200 transition-colors"
+              >
+                Mot de passe oublié ?
+              </Link>
             </div>
-          </form>
 
-          {/* Message */}
-          {message && (
-            <div className={`text-center text-sm px-4 py-3 rounded-xl border backdrop-blur-sm transition-all duration-300 ${
-              message.includes('✅') 
-                ? 'bg-green-500/20 border-green-500/30 text-green-300' 
-                : 'bg-red-500/20 border-red-500/30 text-red-300'
-            }`}>
-              {message}
-            </div>
-          )}
+            {/* Message */}
+            {message && (
+              <div className={`text-center text-sm px-4 py-3 rounded-xl border backdrop-blur-sm transition-all duration-300 ${
+                message.includes('✅') 
+                  ? 'bg-green-500/20 border-green-500/30 text-green-300' 
+                  : 'bg-red-500/20 border-red-500/30 text-red-300'
+              }`}>
+                {message}
+              </div>
+            )}
+          </form>
         </div>
       </div>
     </div>
