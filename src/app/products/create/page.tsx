@@ -13,10 +13,10 @@ export default function CreateProductPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     setValue,
     watch,
-  } = useForm<ProductFormData>();
+  } = useForm<ProductFormData>({ mode: 'onChange' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -74,57 +74,100 @@ export default function CreateProductPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">Ajouter un Nouveau Produit</h1>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-6 md:p-8 transition-colors duration-300">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Ajouter un Nouveau Produit
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Remplissez les détails de votre produit agricole
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
           <div>
-            <label className="block text-sm font-medium mb-1">Nom du produit *</label>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Nom du produit *
+            </label>
             <input
               type="text"
               {...register("name", {
                 required: "Ce champ est requis",
                 minLength: { value: 3, message: "Au moins 3 caractères" },
               })}
-              className="w-full p-2 border rounded"
+              className={`w-full p-3 rounded-lg border ${
+                errors.name 
+                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                  : 'border-gray-300 dark:border-slate-600 focus:ring-green-500 focus:border-green-500'
+              } bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
+              placeholder="Ex: Tomates cerises bio"
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="mt-1 text-red-500 text-sm">{errors.name.message}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description *</label>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Description *
+            </label>
             <textarea
               rows={4}
               {...register("description", {
                 required: "Ce champ est requis",
                 minLength: { value: 10, message: "Au moins 10 caractères" },
               })}
-              className="w-full p-2 border rounded"
+              className={`w-full p-3 rounded-lg border ${
+                errors.description 
+                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                  : 'border-gray-300 dark:border-slate-600 focus:ring-green-500 focus:border-green-500'
+              } bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
+              placeholder="Décrivez votre produit en détail..."
             />
-            {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+            {errors.description && (
+              <p className="mt-1 text-red-500 text-sm">{errors.description.message}</p>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
-              <label className="block text-sm font-medium mb-1">Prix (FCFA) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min="1"
-                {...register("price", {
-                  required: "Ce champ est requis",
-                  min: { value: 1, message: "Le prix doit être positif" },
-                })}
-                className="w-full p-2 border rounded"
-              />
-              {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                Prix (FCFA) *
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="1"
+                  {...register("price", {
+                    required: "Ce champ est requis",
+                    min: { value: 1, message: "Le prix doit être positif" },
+                  })}
+                  className={`w-full pl-8 pr-3 py-3 rounded-lg border ${
+                    errors.price 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300 dark:border-slate-600 focus:ring-green-500 focus:border-green-500'
+                  } bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
+                  placeholder="0.00"
+                />
+                <span className="absolute left-3 top-3.5 text-gray-500 dark:text-gray-400">F</span>
+              </div>
+              {errors.price && (
+                <p className="mt-1 text-red-500 text-sm">{errors.price.message}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Catégorie *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                Catégorie *
+              </label>
               <select
                 {...register("category", { required: "Ce champ est requis" })}
-                className="w-full p-2 border rounded"
+                className={`w-full p-3 rounded-lg border ${
+                  errors.category 
+                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                    : 'border-gray-300 dark:border-slate-600 focus:ring-green-500 focus:border-green-500'
+                } bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
               >
                 <option value="">Sélectionnez une catégorie</option>
                 <option value="cereales">Céréales (maïs, riz, mil, sorgho)</option>
@@ -136,11 +179,15 @@ export default function CreateProductPage() {
                 <option value="equipements">Équipements agricoles</option>
                 <option value="autres">Autres</option>
               </select>
-              {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
+              {errors.category && (
+                <p className="mt-1 text-red-500 text-sm">{errors.category.message}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Quantité disponible *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                Quantité disponible *
+              </label>
               <input
                 type="number"
                 min="1"
@@ -148,50 +195,101 @@ export default function CreateProductPage() {
                   required: "Ce champ est requis",
                   min: { value: 1, message: "Minimum 1" },
                 })}
-                className="w-full p-2 border rounded"
+                className={`w-full p-3 rounded-lg border ${
+                  errors.available_quantity 
+                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                    : 'border-gray-300 dark:border-slate-600 focus:ring-green-500 focus:border-green-500'
+                } bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
+                placeholder="Ex: 50"
               />
-              {errors.available_quantity && <p className="text-red-500 text-sm">{errors.available_quantity.message}</p>}
+              {errors.available_quantity && (
+                <p className="mt-1 text-red-500 text-sm">{errors.available_quantity.message}</p>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium mb-1">Unité</label>
-              <input type="text" {...register("unit")} className="w-full p-2 border rounded" />
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                Unité
+              </label>
+              <input 
+                type="text" 
+                {...register("unit")} 
+                className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                placeholder="Ex: Kg, Pièce, Sac"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Date de récolte</label>
-              <input type="date" {...register("harvest_date")} className="w-full p-2 border rounded" />
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                Date de récolte
+              </label>
+              <input 
+                type="date" 
+                {...register("harvest_date")} 
+                className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              />
             </div>
           </div>
 
-          <div>
-            <label className="flex items-center">
-              <input type="checkbox" {...register("organic")} className="mr-2" /> Produit biologique
+          <div className="flex items-center p-3 rounded-lg bg-gray-50 dark:bg-slate-700/50">
+            <input 
+              type="checkbox" 
+              id="organic"
+              {...register("organic")} 
+              className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label htmlFor="organic" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Produit biologique
             </label>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Image du produit *</label>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Image du produit *
+            </label>
             {imagePreview ? (
-              <div>
-                <img src={imagePreview} alt="Preview" className="max-w-xs max-h-48 rounded border" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setFile(null);
-                    setValue("image", null as any);
-                  }}
-                  className="text-sm text-red-500 mt-2"
-                >
-                  Changer d'image
-                </button>
+              <div className="relative group">
+                <div className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full h-64 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null);
+                      setFile(null);
+                      setValue("image", null as any);
+                    }}
+                    className="bg-white dark:bg-slate-700 text-gray-800 dark:text-gray-200 p-2 rounded-full shadow-md hover:bg-gray-100 dark:hover:bg-slate-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             ) : (
-              <label className="block border-2 border-dashed rounded-lg p-6 text-center cursor-pointer bg-gray-50 hover:bg-gray-100">
-                <span className="block text-sm text-gray-600 mb-2">Uploader une image</span>
+              <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center cursor-pointer bg-gray-50 dark:bg-slate-700/30 hover:bg-gray-100 dark:hover:bg-slate-700/50 border-gray-300 dark:border-slate-600 transition-colors duration-200">
+                <div className="mb-3 p-3 bg-green-100 dark:bg-emerald-900/30 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Télécharger une image
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    PNG, JPG ou JPEG (max. 5MB)
+                  </p>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
@@ -201,28 +299,43 @@ export default function CreateProductPage() {
                 />
               </label>
             )}
-            {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image.message}</p>}
+            {errors.image && (
+              <p className="mt-2 text-red-500 text-sm">{errors.image.message}</p>
+            )}
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-4 pt-4">
             <button
               type="button"
               onClick={() => router.push("/products")}
-              className="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400"
+              className="px-6 py-3 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600/70 transition-colors duration-300"
             >
               Annuler
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+              disabled={isSubmitting || !isValid}
+              className={`px-6 py-3 rounded-lg text-white font-medium transition-all duration-300 ${
+                isSubmitting || !isValid
+                  ? 'bg-gray-400 dark:bg-slate-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md hover:shadow-lg'
+              }`}
             >
-              {isSubmitting ? "Création..." : "Créer le produit"}
+              {isSubmitting ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Création...
+                </span>
+              ) : (
+                "Créer le produit"
+              )}
             </button>
           </div>
         </form>
       </div>
     </div>
-    
   );
 }

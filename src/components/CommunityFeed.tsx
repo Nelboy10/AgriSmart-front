@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { toast } from 'sonner'
-import { MessageCircle, Send, Plus, Clock, User, Heart, Share2, MoreHorizontal } from 'lucide-react'
+import { MessageCircle, Send, Image as ImageIcon, ThumbsUp, Smile, Share2, MoreHorizontal, User } from 'lucide-react'
 
 interface Author {
   id: number
@@ -81,7 +81,6 @@ export default function CommunityFeed() {
       const data = await res.json()
       setPosts(data)
       
-      // Initialiser l'état des likes
       const initialLikes = data.reduce((acc: Record<number, boolean>, post: Post) => {
         acc[post.id] = post.is_liked
         return acc
@@ -161,7 +160,6 @@ export default function CommunityFeed() {
       return
     }
 
-    // Vérifier si l'utilisateur a déjà liké ce post
     if (likedPosts[postId]) {
       toast.info("Vous avez déjà aimé ce post.")
       return
@@ -192,7 +190,6 @@ export default function CommunityFeed() {
           : post
       ))
       
-      // Mettre à jour l'état local des likes
       setLikedPosts(prev => ({
         ...prev,
         [postId]: !prev[postId]
@@ -229,13 +226,11 @@ export default function CommunityFeed() {
 
       const newComment = await res.json()
       
-      // Mettre à jour les commentaires du post
       setPostComments(prev => ({
         ...prev,
         [postId]: [newComment, ...(prev[postId] || [])]
       }))
       
-      // Mettre à jour le compteur de commentaires
       setPosts(posts.map(post => 
         post.id === postId
           ? { ...post, comments_count: post.comments_count + 1 }
@@ -262,55 +257,56 @@ export default function CommunityFeed() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+      <div className="flex flex-col items-center justify-center py-16 space-y-4 bg-gray-100 dark:bg-gray-900 min-h-screen">
         <div className="w-10 h-10 border-4 border-blue-100 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-500 rounded-full animate-spin"></div>
-        <p className="text-slate-500 dark:text-slate-400 font-medium">Chargement des posts...</p>
+        <p className="text-gray-500 dark:text-gray-400 font-medium">Chargement des posts...</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 px-4 sm:px-0">
-      {/* Formulaire de création de post */}
+    <div className="max-w-2xl mx-auto bg-gray-100 dark:bg-gray-900 min-h-screen pb-10">
+      {/* Header style Facebook */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10 p-4">
+        <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">Community</h1>
+      </div>
+
+      {/* Post creation form - Facebook style */}
       {isAuthenticated && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 transition-all hover:shadow-md dark:hover:shadow-slate-700/50">
-          <div className="flex items-start gap-3">
-            <Avatar className="h-10 w-10 ring-2 ring-blue-100 dark:ring-blue-900">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-4 p-4 mx-4 mt-4">
+          <div className="flex items-center gap-3 mb-4">
+            <Avatar className="h-10 w-10">
               <AvatarImage src={user?.photo || ''} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+              <AvatarFallback className="bg-blue-500 text-white font-semibold">
                 {user?.username?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}
               </AvatarFallback>
             </Avatar>
-            <form onSubmit={handlePostSubmit} className="flex-1 space-y-3">
+            <form onSubmit={handlePostSubmit} className="flex-1">
               <Textarea
-                placeholder="Partagez quelque chose avec la communauté..."
+                placeholder="Quoi de neuf ?"
                 aria-label="Zone de texte pour publier un post"
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
                 rows={3}
-                className="min-h-[100px] border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/50 resize-none text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm dark:bg-slate-800/90"
+                className="w-full rounded-2xl bg-gray-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-800 dark:text-gray-200 placeholder-gray-500"
               />
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-xs text-slate-400 dark:text-slate-500 gap-1">
-                  <Plus className="w-3 h-3" />
-                  <span>Ajoutez votre contenu</span>
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex space-x-2">
+                  <Button variant="ghost" className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <ImageIcon className="w-5 h-5 text-green-500" />
+                    <span className="ml-1">Photo</span>
+                  </Button>
+                  <Button variant="ghost" className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <Smile className="w-5 h-5 text-yellow-500" />
+                    <span className="ml-1">Émotion</span>
+                  </Button>
                 </div>
                 <Button 
                   type="submit" 
                   disabled={!newPostContent.trim() || isSubmittingPost}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-5 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md font-medium disabled:opacity-50"
                 >
-                  {isSubmittingPost ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Publication...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Publier
-                    </>
-                  )}
+                  {isSubmittingPost ? 'Publication...' : 'Publier'}
                 </Button>
               </div>
             </form>
@@ -318,17 +314,17 @@ export default function CommunityFeed() {
         </div>
       )}
 
-      {/* Liste des posts */}
+      {/* Posts list */}
       {posts.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-8 text-center">
-          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MessageCircle className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mx-4 p-8 text-center">
+          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageCircle className="w-8 h-8 text-blue-500 dark:text-blue-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Aucun post pour le moment</h3>
-          <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Aucun post pour le moment</h3>
+          <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
             {isAuthenticated 
-              ? "Soyez le premier à partager quelque chose avec la communauté !" 
-              : "Connectez-vous pour voir et partager des posts avec la communauté."}
+              ? "Soyez le premier à partager quelque chose !" 
+              : "Connectez-vous pour voir et partager des posts."}
           </p>
         </div>
       ) : (
@@ -339,126 +335,149 @@ export default function CommunityFeed() {
           const isExpanded = expandedPostId === post.id
 
           return (
-            <article key={post.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md dark:hover:shadow-slate-700/50 transition-all duration-200 overflow-hidden">
-              {/* En-tête du post */}
-              <div className="p-5">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-10 w-10 ring-2 ring-slate-100 dark:ring-slate-700">
-                    <AvatarImage src={authorInfo.photo || ''} />
-                    <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-semibold">
-                      {authorInfo.username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-3 mb-1">
-                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{authorInfo.username}</h3>
-                      <button className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-full">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
+            <article key={post.id} className="bg-white dark:bg-gray-800 rounded-lg shadow mb-4 mx-4">
+              {/* Post header */}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={authorInfo.photo || ''} />
+                      <AvatarFallback className="bg-gray-500 text-white">
+                        {authorInfo.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{authorInfo.username}</h3>
+                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <span>{safeFormatDate(post.created_at)}</span>
+                        <span className="mx-1">·</span>
+                        <span className="text-blue-500">Public</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mb-2">
-                      <Clock className="w-3 h-3" />
-                      <span>{safeFormatDate(post.created_at)}</span>
-                    </div>
-                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line text-sm">{post.content}</p>
                   </div>
-                </div>
-
-                {/* Actions du post */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-                  <button 
-                    onClick={() => handleLikePost(post.id)}
-                    className={`flex items-center gap-1 text-sm ${post.is_liked ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'}`}
-                  >
-                    <Heart className={`w-4 h-4 ${post.is_liked ? 'fill-current' : ''}`} />
-                    <span>{post.likes_count}</span>
+                  <button className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-full">
+                    <MoreHorizontal className="w-5 h-5" />
                   </button>
-                  <div className="flex items-center gap-4">
+                </div>
+                
+                {/* Post content */}
+                <p className="text-gray-800 dark:text-gray-200 mb-4 whitespace-pre-line">{post.content}</p>
+                
+                {/* Post stats */}
+                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 border-t border-b border-gray-200 dark:border-gray-700 py-2">
+                  <div className="flex items-center">
+                    <div className="bg-blue-500 text-white rounded-full p-1 flex items-center justify-center">
+                      <ThumbsUp className="w-3 h-3" />
+                    </div>
+                    <span className="ml-1">{post.likes_count}</span>
+                  </div>
+                  <div>
                     <button 
                       onClick={() => toggleComments(post.id)}
-                      className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400"
+                      className="hover:underline"
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>{post.comments_count}</span>
-                    </button>
-                    <button className="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400">
-                      <Share2 className="w-4 h-4" />
+                      {post.comments_count} commentaire{post.comments_count !== 1 ? 's' : ''}
                     </button>
                   </div>
+                </div>
+                
+                {/* Post actions */}
+                <div className="flex justify-between mt-1">
+                  <button 
+                    onClick={() => handleLikePost(post.id)}
+                    className={`flex-1 flex items-center justify-center py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 ${post.is_liked ? 'text-blue-500' : 'text-gray-500'}`}
+                  >
+                    <ThumbsUp className={`w-5 h-5 mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
+                    <span>J'aime</span>
+                  </button>
+                  <button 
+                    onClick={() => toggleComments(post.id)}
+                    className="flex-1 flex items-center justify-center py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-1" />
+                    <span>Commenter</span>
+                  </button>
+                  <button className="flex-1 flex items-center justify-center py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
+                    <Share2 className="w-5 h-5 mr-1" />
+                    <span>Partager</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Section commentaires */}
+              {/* Comments section */}
               {isExpanded && (
-                <div className="border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                <div className="bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
                   {isLoadingComments ? (
                     <div className="flex justify-center p-4">
-                      <div className="w-6 h-6 border-2 border-blue-100 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-500 rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 border-2 border-blue-100 dark:border-blue-900 border-t-blue-500 rounded-full animate-spin"></div>
                     </div>
                   ) : (
                     <>
                       {comments.length > 0 && (
-                        <div className="px-5 py-3">
-                          <div className="space-y-3">
-                            {comments.map((comment) => {
-                              const commentAuthorInfo = getAuthorInfo(comment.author)
-                              return (
-                                <div key={comment.id} className="flex items-start gap-3">
-                                  <Avatar className="w-8 h-8 ring-1 ring-slate-200 dark:ring-slate-600">
-                                    <AvatarImage src={commentAuthorInfo.photo || ''} />
-                                    <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white text-xs font-semibold">
-                                      {commentAuthorInfo.username.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="bg-white dark:bg-slate-700 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-600 shadow-xs">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">{commentAuthorInfo.username}</h4>
-                                        <div className="flex items-center gap-1 text-slate-400 dark:text-slate-400">
-                                          <Clock className="w-3 h-3" />
-                                          <span className="text-xs">
-                                            {safeFormatDate(comment.created_at).split(' ')[0]}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">{comment.content}</p>
-                                    </div>
+                        <div className="p-4 space-y-3">
+                          {comments.map((comment) => {
+                            const commentAuthorInfo = getAuthorInfo(comment.author)
+                            return (
+                              <div key={comment.id} className="flex items-start space-x-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={commentAuthorInfo.photo || ''} />
+                                  <AvatarFallback className="bg-gray-500 text-white text-xs">
+                                    {commentAuthorInfo.username.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl p-3">
+                                    <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100">{commentAuthorInfo.username}</h4>
+                                    <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">{comment.content}</p>
+                                  </div>
+                                  <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 ml-3 space-x-3">
+                                    <button className="hover:underline">J'aime</button>
+                                    <span>{safeFormatDate(comment.created_at)}</span>
                                   </div>
                                 </div>
-                              )
-                            })}
-                          </div>
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
 
-                      {/* Formulaire de commentaire */}
+                      {/* Comment form */}
                       {isAuthenticated && (
-                        <div className="p-4">
-                          <form 
-                            onSubmit={(e) => {
-                              e.preventDefault()
-                              const form = e.currentTarget
-                              const content = (form.elements.namedItem('comment') as HTMLTextAreaElement).value
-                              handleCommentSubmit(post.id, content)
-                              form.reset()
-                            }}
-                            className="flex gap-2 items-end"
-                          >
-                            <Textarea
-                              name="comment"
-                              placeholder="Ajouter un commentaire..."
-                              aria-label="Zone de commentaire"
-                              rows={1}
-                              className="flex-1 min-h-[40px] border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/50 resize-none text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:bg-slate-800/90 dark:text-slate-200"
-                            />
-                            <Button 
-                              type="submit" 
-                              size="sm" 
-                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-3 py-1.5 rounded-lg font-medium transition-all h-[40px] shadow-sm"
+                        <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={user?.photo || ''} />
+                              <AvatarFallback className="bg-blue-500 text-white text-xs">
+                                {user?.username?.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <form 
+                              onSubmit={(e) => {
+                                e.preventDefault()
+                                const form = e.currentTarget
+                                const content = (form.elements.namedItem('comment') as HTMLTextAreaElement).value
+                                handleCommentSubmit(post.id, content)
+                                form.reset()
+                              }}
+                              className="flex-1 flex items-center"
                             >
-                              <Send className="w-4 h-4" />
-                            </Button>
-                          </form>
+                              <div className="flex-1 relative">
+                                <Textarea
+                                  name="comment"
+                                  placeholder="Écrivez un commentaire..."
+                                  aria-label="Zone de commentaire"
+                                  rows={1}
+                                  className="w-full rounded-2xl bg-gray-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-800 dark:text-gray-200 placeholder-gray-500 pr-10"
+                                />
+                                <button 
+                                  type="button"
+                                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                >
+                                  <Smile className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </form>
+                          </div>
                         </div>
                       )}
                     </>
