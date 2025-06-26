@@ -324,7 +324,7 @@ export default function CommunityPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden h-screen">
         {/* Mobile Header */}
         <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
           <button
@@ -345,7 +345,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto bg-white dark:bg-gray-900">
+        <div className="flex-1 overflow-auto bg-white dark:bg-gray-900 h-full">
           {viewError ? (
             <ErrorView error={viewError} retry={retryView} />
           ) : CurrentView ? (

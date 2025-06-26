@@ -64,7 +64,7 @@ export default function StatsView() {
   }, [token]);
 
   return (
-    <div className="flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
+    <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
       {/* En-tête avec le titre et la description */}
       <div className="p-6 border-b border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto">
@@ -74,13 +74,13 @@ export default function StatsView() {
       </div>
 
       {/* Contenu principal */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Carte des statistiques du forum */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl p-6 border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
+              <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl p-6 border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] h-full">
                 <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg">
                     <Hash size={24} className="text-primary-foreground" />
@@ -161,7 +161,7 @@ export default function StatsView() {
             {/* Carte des statistiques utilisateur */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-primary/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl p-6 border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
+              <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl p-6 border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] h-full">
                 <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-br from-accent to-accent/80 rounded-xl shadow-lg">
                     <Users size={24} className="text-accent-foreground" />
@@ -183,41 +183,62 @@ export default function StatsView() {
                     {error.user}
                   </div>
                 ) : userStats ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in duration-500">
-                    <StatCard 
-                      label="Sujets créés"
-                      value={userStats.topics_created}
-                      icon={<Hash size={18} className="text-white" />}
-                      gradientFrom="from-orange-500"
-                      gradientTo="to-red-500"
-                    />
-                    <StatCard 
-                      label="Messages postés"
-                      value={userStats.posts_created}
-                      icon={<MessageCircle size={18} className="text-white" />}
-                      gradientFrom="from-green-500"
-                      gradientTo="to-emerald-500"
-                    />
-                    <StatCard 
-                      label="J'aime reçus"
-                      value={userStats.likes_received}
-                      icon={<ThumbsUp size={18} className="text-white" />}
-                      gradientFrom="from-pink-500"
-                      gradientTo="to-rose-500"
-                    />
-                    <StatCard 
-                      label="Conversations"
-                      value={userStats.active_threads}
-                      icon={<MessageSquare size={18} className="text-white" />}
-                      gradientFrom="from-indigo-500"
-                      gradientTo="to-blue-500"
-                    />
+                  <div className="space-y-8 animate-in fade-in duration-500">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <StatCard 
+                        label="Sujets créés"
+                        value={userStats.topics_created}
+                        icon={<Hash size={18} className="text-white" />}
+                        gradientFrom="from-orange-500"
+                        gradientTo="to-red-500"
+                      />
+                      <StatCard 
+                        label="Messages postés"
+                        value={userStats.posts_created}
+                        icon={<MessageCircle size={18} className="text-white" />}
+                        gradientFrom="from-green-500"
+                        gradientTo="to-emerald-500"
+                      />
+                      <StatCard 
+                        label="J'aime reçus"
+                        value={userStats.likes_received}
+                        icon={<ThumbsUp size={18} className="text-white" />}
+                        gradientFrom="from-blue-500"
+                        gradientTo="to-indigo-500"
+                      />
+                      <StatCard 
+                        label="Messages privés"
+                        value={userStats.messages_sent}
+                        icon={<MessageSquare size={18} className="text-white" />}
+                        gradientFrom="from-purple-500"
+                        gradientTo="to-pink-500"
+                      />
+                    </div>
+                    
+                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6 border border-border/30">
+                      <h4 className="font-semibold mb-4 text-lg flex items-center gap-2 text-foreground">
+                        <Activity size={20} className="text-accent" />
+                        Activité récente
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors duration-200">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Discussions actives
+                          </span>
+                          <span className="font-semibold text-accent">{userStats.active_threads}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors duration-200">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Participation
+                          </span>
+                          <span className="font-semibold text-accent">
+                            {Math.round((userStats.posts_created / Math.max(1, forumStats?.total_posts || 1)) * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Connectez-vous pour voir vos statistiques personnelles</p>
-                  </div>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
@@ -228,21 +249,16 @@ export default function StatsView() {
 };
 
 // Composant de carte de statistique réutilisable
-const StatCard = ({ label, value, icon, gradientFrom, gradientTo }: { label: string; value: number; icon: JSX.Element; gradientFrom: string; gradientTo: string }) => (
-  <div className="relative group/card">
-    <div className={`absolute inset-0 bg-gradient-to-br ${gradientFrom}/20 ${gradientTo}/20 rounded-xl blur opacity-0 group-hover/card:opacity-100 transition-opacity duration-300`} />
-    <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-border/30 hover:shadow-md transition-all duration-300">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-lg shadow`}>
+function StatCard({ label, value, icon, gradientFrom, gradientTo }: { label: string; value: number; icon: JSX.Element; gradientFrom: string; gradientTo: string }) {
+  return (
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl border border-border/50 hover:shadow-md transition-shadow duration-300">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        <div className={`p-1.5 rounded-lg bg-gradient-to-br ${gradientFrom} ${gradientTo} shadow-md`}>
           {icon}
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground font-medium">{label}</p>
-          <p className={`text-2xl font-bold bg-gradient-to-br ${gradientFrom} ${gradientTo} bg-clip-text text-transparent`}>
-            {value}
-          </p>
-        </div>
       </div>
+      <p className="text-2xl font-bold text-foreground">{value}</p>
     </div>
-  </div>
-);
+  );
+}
