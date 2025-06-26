@@ -1,14 +1,11 @@
-'use client';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
-import Link from 'next/link';
-import { 
-  Hash, Search, Users,Clock, Bell,Leaf, Plus, ArrowLeft, Pin, Lock, Eye, MessageCircle, 
-  ThumbsUp, Reply, MoreVertical, X, Check, Paperclip, Smile 
+import {
+  Hash, Users, Clock, Bell, Leaf, Plus, ArrowLeft, Pin, Lock, Eye, MessageCircle,
+  ThumbsUp, Reply, MoreVertical, X, Check, Paperclip, Smile, User, Image
 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
-
 
 interface User {
   id: number;
@@ -64,23 +61,43 @@ export default function ForumView() {
   const [showNewTopic, setShowNewTopic] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [newTopic, setNewTopic] = useState({ title: '', content: '' });
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState({
     categories: false,
     topics: false,
     posts: false,
-    posting: false
+    posting: false,
   });
   const [error, setError] = useState({
     categories: '',
     topics: '',
     posts: '',
-    posting: ''
+    posting: '',
   });
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [mobileView, setMobileView] = useState<'categories' | 'topics' | 'posts'>('categories');
+  const emojiPickerRef = useRef<HTMLDivElement>(null!);
+  const containerRef = useRef<HTMLDivElement>(null!);
 
-  // Fermer le sélecteur d'emoji quand on clique ailleurs
+  // Check screen size and adjust view
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        if (selectedTopic) {
+          setMobileView('posts');
+        } else if (selectedCategory) {
+          setMobileView('topics');
+        } else {
+          setMobileView('categories');
+        }
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [selectedCategory, selectedTopic]);
+
+  // Handle click outside emoji picker
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
@@ -136,9 +153,25 @@ export default function ForumView() {
     }
   };
 
+  const handleCategorySelect = (category: Category) => {
+    setSelectedCategory(category);
+    setSelectedTopic(null);
+    if (window.innerWidth < 768) {
+      setMobileView('topics');
+    }
+    fetchTopics(category.id);
+  };
+
+  const handleTopicSelect = (topic: Topic) => {
+    setSelectedTopic(topic);
+    if (window.innerWidth < 768) {
+      setMobileView('posts');
+    }
+    fetchPosts(topic.id);
+  };
+
   const createCategory = async () => {
     if (!newCategory.name.trim()) return;
-    
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/categories/`, newCategory, {
         headers: { Authorization: `Bearer ${token}` }
@@ -153,7 +186,6 @@ export default function ForumView() {
 
   const createTopic = async () => {
     if (!newTopic.title.trim() || !newTopic.content.trim() || !selectedCategory) return;
-    
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/topics/`, {
         ...newTopic,
@@ -171,7 +203,6 @@ export default function ForumView() {
 
   const createPost = async () => {
     if (!newPostContent.trim() || !selectedTopic) return;
-    
     setLoading(prev => ({ ...prev, posting: true }));
     setError(prev => ({ ...prev, posting: '' }));
     try {
@@ -190,17 +221,6 @@ export default function ForumView() {
     }
   };
 
-  const toggleLike = async (postId: string) => {
-    try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/posts/${postId}/toggle_like/`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (selectedTopic) fetchPosts(selectedTopic.id);
-    } catch (err) {
-      console.error('Error toggling like:', err);
-    }
-  };
-
   const formatTimeAgo = (timestamp: string) => {
     const now = new Date();
     const time = new Date(timestamp);
@@ -215,560 +235,751 @@ export default function ForumView() {
     return `${days}j`;
   };
 
+  const handleBackToCategories = () => {
+    setSelectedCategory(null);
+    setSelectedTopic(null);
+    setMobileView('categories');
+  };
+
+  const handleBackToTopics = () => {
+    setSelectedTopic(null);
+    setMobileView('topics');
+  };
+
   useEffect(() => {
     fetchCategories();
   }, [token]);
 
-  useEffect(() => {
-    if (selectedCategory) fetchTopics(selectedCategory.id);
-  }, [selectedCategory, token]);
-
-  useEffect(() => {
-    if (selectedTopic) fetchPosts(selectedTopic.id);
-  }, [selectedTopic, token]);
-
-  if (selectedTopic) {
-    return (
-      <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
-        {/* Topic Header */}
-        <div className="p-2 sm:p-4 border-b border-border bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => setSelectedTopic(null)}
-              className="p-1 sm:p-2 rounded-lg hover:bg-accent/50 flex-shrink-0"
-              aria-label="Retour"
-            >
-              <ArrowLeft className="text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                {selectedTopic.is_pinned && <Pin size={14} className="text-emerald-500 flex-shrink-0" />}
-                {selectedTopic.is_locked && <Lock size={14} className="text-destructive flex-shrink-0" />}
-                <h2 className="text-base sm:text-xl font-bold truncate">{selectedTopic.title}</h2>
-              </div>
-              <div className="flex items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
-                <span className="truncate">
-                  <Link href={`/profile/${selectedTopic.author.id}`} className="hover:underline">
-                    @{selectedTopic.author.username}
-                  </Link>
-                </span>
-                <span className="hidden sm:inline">•</span>
-                <span>{formatTimeAgo(selectedTopic.created_at)}</span>
-                <span className="hidden sm:inline">•</span>
-                <span className="flex items-center gap-1">
-                  <Eye size={12} className="flex-shrink-0" />
-                  <span>{selectedTopic.views_count} vues</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Posts List */}
-        <div className="flex-1 overflow-auto p-2 sm:p-4 space-y-3 sm:space-y-6">
-          {loading.posts && (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
-            </div>
-          )}
-
-          {error.posts && (
-            <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
-              {error.posts}
-            </div>
-          )}
-
-          {!loading.posts && !error.posts && (
-            <>
-              {/* Main Topic Post */}
-              <div className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-3 sm:p-6 border border-border/50 backdrop-blur-sm">
-                <div className="flex gap-2 sm:gap-4">
-                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm sm:text-xl overflow-hidden flex-shrink-0">
-                    <Link href={`/profile/${selectedTopic.author.id}`} className="w-full h-full flex items-center justify-center">
-                      {selectedTopic.author.photo ? (
-                        <img src={selectedTopic.author.photo} alt={selectedTopic.author.username} className="w-full h-full object-cover" />
-                      ) : (
-                        selectedTopic.author.username.charAt(0)
-                      )}
-                    </Link>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
-                      <span className="font-semibold text-sm sm:text-base">
-                        <Link href={`/profile/${selectedTopic.author.id}`} className="hover:underline">
-                          @{selectedTopic.author.username}
-                        </Link>
-                      </span>
-                      <span className="text-xs sm:text-sm text-muted-foreground">{formatTimeAgo(selectedTopic.created_at)}</span>
-                    </div>
-                    <p className="whitespace-pre-line text-sm sm:text-base">{selectedTopic.content}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Replies */}
-              {posts.map(post => (
-                <div key={post.id} className="bg-white/90 dark:bg-gray-900/90 rounded-xl p-3 sm:p-6 border border-border/50 backdrop-blur-sm">
-                  <div className="flex gap-2 sm:gap-4">
-                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-secondary rounded-full flex items-center justify-center text-secondary-foreground text-sm sm:text-xl overflow-hidden flex-shrink-0">
-                      <Link href={`/profile/${post.author.id}`} className="w-full h-full flex items-center justify-center">
-                        {post.author.photo ? (
-                          <img src={post.author.photo} alt={post.author.username} className="w-full h-full object-cover" />
-                        ) : (
-                          post.author.username.charAt(0)
-                        )}
-                      </Link>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
-                        <span className="font-semibold text-sm sm:text-base">
-                          <Link href={`/profile/${post.author.id}`} className="hover:underline">
-                            @{post.author.username}
-                          </Link>
-                        </span>
-                        <span className="text-xs sm:text-sm text-muted-foreground">
-                          {formatTimeAgo(post.created_at)}
-                          {post.is_edited && <span className="text-xs italic ml-2">(modifié)</span>}
-                        </span>
-                      </div>
-                      <p className="whitespace-pre-line text-sm sm:text-base">{post.content}</p>
-                      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/50">
-                        <button 
-                          onClick={() => toggleLike(post.id)}
-                          className={`flex items-center gap-1 ${post.user_has_liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                        >
-                          <ThumbsUp size={16} />
-                          <span>{post.likes_count}</span>
-                        </button>
-                        <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                          <Reply size={16} />
-                          <span>Répondre</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-
-        {/* New Post Form */}
-        {!selectedTopic.is_locked && (
-          <div className="p-2 sm:p-4 border-t border-border/50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
-            <div className="flex gap-2 sm:gap-4">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-accent rounded-full flex items-center justify-center text-accent-foreground text-sm sm:text-xl overflow-hidden flex-shrink-0">
-                <Link href={`/profile/${user?.id}`} className="w-full h-full flex items-center justify-center">
-                  {user?.photo ? (
-                    <img src={user.photo} alt={user.username} className="w-full h-full object-cover" />
-                  ) : (
-                    user?.username.charAt(0)
-                  )}
-                </Link>
-              </div>
-              <div className="min-w-0 flex-1 relative">
-                <textarea
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder="Écrivez votre réponse..."
-                  rows={3}
-                  className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <div className="flex items-center gap-2">
-                    <button 
-                      type="button"
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50"
-                    >
-                      <Smile size={18} />
-                    </button>
-                    <button className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50">
-                      <Paperclip size={18} />
-                    </button>
-                  </div>
-                  <button
-                    onClick={createPost}
-                    disabled={!newPostContent.trim() || loading.posting}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {loading.posting ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary-foreground" />
-                    ) : (
-                      <>
-                        <span>Publier</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                
-                {showEmojiPicker && (
-                  <div ref={emojiPickerRef} className="absolute bottom-14 left-0 z-10">
-                    <EmojiPicker 
-                      onEmojiClick={(emojiData) => {
-                        setNewPostContent(prev => prev + emojiData.emoji);
-                      }}
-                      width={300}
-                      height={350}
-                      previewConfig={{ showPreview: false }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-            {error.posting && (
-              <div className="mt-2 text-sm text-destructive">{error.posting}</div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-   // Liste des topics dans une catégorie
-   if (selectedCategory) {
-    return (
-      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-            >
-              <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{selectedCategory.name}</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{selectedCategory.description}</p>
-            </div>
-          </div>
-          <button 
-            onClick={() => setShowNewTopic(true)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center gap-2 transition-colors shadow-sm"
-          >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Nouveau sujet</span>
-          </button>
-        </div>
-
-        {/* Liste des topics */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {loading.topics && (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
-            </div>
-          )}
-
-          {!loading.topics && !error.topics && (
-            <div className="space-y-3">
-              {topics.map(topic => (
-                <div
-                  key={topic.id}
-                  onClick={() => setSelectedTopic(topic)}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 cursor-pointer transition-all duration-200 hover:shadow-md"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden shrink-0">
-                      {topic.author.photo ? (
-                        <img src={topic.author.photo} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        topic.author.username.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {topic.is_pinned && <Pin size={16} className="text-amber-500" />}
-                        {topic.is_locked && <Lock size={16} className="text-red-500" />}
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                          {topic.title}
-                        </h3>
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-2">
-                        {topic.content}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Users size={12} />
-                          @{topic.author.username}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye size={12} />
-                          {topic.views_count}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle size={12} />
-                          {topic.posts_count}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock size={12} />
-                          {formatTimeAgo(topic.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {topic.last_post && (
-                      <div className="text-right text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
-                        <p>Dernier message</p>
-                        <p className="font-medium">@{topic.last_post.author.username}</p>
-                        <p>{formatTimeAgo(topic.last_post.created_at)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-
-        {/* New Topic Modal */}
-        {showNewTopic && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white/95 dark:bg-gray-900/95 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border/50 backdrop-blur-sm">
-              <div className="p-6 border-b border-border/50">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Créer un nouveau sujet</h2>
-                  <button
-                    onClick={() => setShowNewTopic(false)}
-                    className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Titre du sujet
-                    </label>
-                    <input
-                      type="text"
-                      value={newTopic.title}
-                      onChange={(e) => setNewTopic({ ...newTopic, title: e.target.value })}
-                      placeholder="Donnez un titre à votre sujet..."
-                      className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Contenu
-                    </label>
-                    <textarea
-                      rows={6}
-                      value={newTopic.content}
-                      onChange={(e) => setNewTopic({ ...newTopic, content: e.target.value })}
-                      placeholder="Développez votre sujet ici..."
-                      className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="p-6 border-t border-border/50 flex justify-end gap-3">
-                <button
-                  onClick={() => setShowNewTopic(false)}
-                  className="px-4 py-2 text-muted-foreground border border-border/50 rounded-lg hover:bg-accent/50 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={createTopic}
-                  disabled={!newTopic.title.trim() || !newTopic.content.trim()}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Publier
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-800/30">
-    {/* Header */}
-    <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-600 rounded-xl flex items-center justify-center">
-          <MessageCircle className="text-white" size={20} />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Forum</h1>
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Rechercher..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-full text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 w-64 transition-colors"
-          />
-        </div>
-        {user && (
-          <button 
-            onClick={() => setShowNewCategory(true)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center gap-2 transition-colors shadow-sm"
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900" ref={containerRef}>
+      {/* Mobile Navigation Header */}
+      <div className="md:hidden flex items-center p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        {mobileView !== 'categories' && (
+          <button
+            onClick={mobileView === 'posts' ? handleBackToTopics : handleBackToCategories}
+            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Nouvelle catégorie</span>
+            <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
           </button>
         )}
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          {mobileView === 'categories' && 'Catégories'}
+          {mobileView === 'topics' && selectedCategory?.name}
+          {mobileView === 'posts' && selectedTopic?.title}
+        </h2>
       </div>
-    </div>
 
-    {/* Categories List */}
-    <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-800/30">
-        {loading.categories && (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-emerald-500" />
+      {/* Desktop Layout */}
+      <div className="hidden md:flex flex-1 overflow-hidden">
+        {/* Sidebar des catégories */}
+        <div className={`w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full bg-white dark:bg-gray-900`}>
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Catégories</h2>
+              <button
+                onClick={() => setShowNewCategory(true)}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <Plus size={20} className="text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
           </div>
-        )}
-
-        {error.categories && (
-          <div className="mx-4 mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-3 rounded-lg text-sm">
-            {error.categories}
-          </div>
-        )}
-
-        {!loading.categories && !error.categories && (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {categories.length > 0 ? (
-              categories.map(category => (
+          <div className="flex-1 overflow-y-auto">
+            {loading.categories ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+              </div>
+            ) : categories.length > 0 ? (
+              categories.map((category) => (
                 <div
                   key={category.id}
-                  onClick={() => setSelectedCategory(category)}
-                  className="bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer transition-colors active:bg-gray-100 dark:active:bg-gray-700/50"
+                  onClick={() => handleCategorySelect(category)}
+                  className={`p-4 border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${selectedCategory?.id === category.id ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
                 >
-                  <div className="flex items-center px-4 py-6">
-                    {/* Avatar/Icon */}
-                    <div className="flex-shrink-0 mr-3">
-                      <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
-                        <Leaf className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0 mr-3">
-                          <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {category.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                            {category.description}
-                          </p>
-                          <div className="flex items-center mt-1 text-xs text-gray-400 dark:text-gray-500">
-                            <span>{category.topics_count} discussions</span>
-                          </div>
-                        </div>
-
-                        {/* Right side info */}
-                        <div className="flex flex-col items-end flex-shrink-0">
-                          <span className="text-xs text-gray-400 dark:text-gray-500 mb-1">
-                            {formatTimeAgo(category.last_activity)}
-                          </span>
-                          <div className="flex items-center">
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">{category.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {category.topics_count} sujets
+                  </p>
+                  <div className="flex items-center mt-2 text-xs text-gray-400">
+                    <Clock size={12} className="mr-1" />
+                    <span>Dernière activité: {formatTimeAgo(category.last_activity)}</span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 px-4">
-                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                  <Hash className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 text-center">
-                  Aucune catégorie disponible
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 text-center mb-6 max-w-sm">
-                  Il n'y a pas encore de catégories de discussion disponibles.
-                </p>
-                {user && (
-                  <button
-                    onClick={() => setShowNewCategory(true)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-                  >
-                    <Plus size={16} />
-                    <span>Créer une catégorie</span>
-                  </button>
-                )}
+              <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                <p>Aucune catégorie trouvée</p>
               </div>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Contenu principal */}
+        <div className="flex-1 flex flex-col h-full">
+          {selectedCategory ? (
+            selectedTopic ? (
+              <TopicPostsView 
+                selectedTopic={selectedTopic}
+                posts={posts}
+                loading={loading}
+                newPostContent={newPostContent}
+                setNewPostContent={setNewPostContent}
+                showEmojiPicker={showEmojiPicker}
+                setShowEmojiPicker={setShowEmojiPicker}
+                emojiPickerRef={emojiPickerRef}
+                createPost={createPost}
+                formatTimeAgo={formatTimeAgo}
+                onBack={() => setSelectedTopic(null)}
+              />
+            ) : (
+              <TopicsListView 
+                selectedCategory={selectedCategory}
+                topics={topics}
+                loading={loading}
+                setShowNewTopic={setShowNewTopic}
+                handleTopicSelect={handleTopicSelect}
+                formatTimeAgo={formatTimeAgo}
+              />
+            )
+          ) : (
+            <EmptyForumView 
+              setShowNewCategory={setShowNewCategory}
+            />
+          )}
+        </div>
       </div>
 
-      {/* New Category Modal */}
-      {showNewCategory && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white/95 dark:bg-gray-900/95 rounded-2xl max-w-md w-full border border-border/50 backdrop-blur-sm">
-            <div className="p-6 border-b border-border/50">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Nouvelle catégorie</h2>
+      {/* Mobile Views */}
+      <div className="md:hidden flex-1 overflow-hidden">
+        {mobileView === 'categories' && (
+          <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Catégories</h2>
                 <button
-                  onClick={() => setShowNewCategory(false)}
-                  className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50"
+                  onClick={() => setShowNewCategory(true)}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  <X size={20} />
+                  <Plus size={20} className="text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
             </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Nom de la catégorie
-                  </label>
-                  <input
-                    type="text"
-                    value={newCategory.name}
-                    onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                    placeholder="Nom de la nouvelle catégorie..."
-                    className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                  />
+            <div className="flex-1 overflow-y-auto">
+              {loading.categories ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={newCategory.description}
-                    onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
-                    placeholder="Description de la catégorie..."
-                    className="w-full bg-input border border-border/50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-                    rows={3}
-                  />
+              ) : categories.length > 0 ? (
+                categories.map((category) => (
+                  <div
+                    key={category.id}
+                    onClick={() => handleCategorySelect(category)}
+                    className={`p-4 border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${selectedCategory?.id === category.id ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
+                  >
+                    <h3 className="font-medium text-gray-900 dark:text-white">{category.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {category.topics_count} sujets
+                    </p>
+                    <div className="flex items-center mt-2 text-xs text-gray-400">
+                      <Clock size={12} className="mr-1" />
+                      <span>Dernière activité: {formatTimeAgo(category.last_activity)}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  <p>Aucune catégorie trouvée</p>
                 </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-border/50 flex justify-end gap-3">
-              <button
-                onClick={() => setShowNewCategory(false)}
-                className="px-4 py-2 text-muted-foreground border border-border/50 rounded-lg hover:bg-accent/50 transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={createCategory}
-                disabled={!newCategory.name.trim()}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Créer
-              </button>
+              )}
             </div>
           </div>
-        </div>
+        )}
+
+        {mobileView === 'topics' && selectedCategory && (
+          <TopicsListView 
+            selectedCategory={selectedCategory}
+            topics={topics}
+            loading={loading}
+            setShowNewTopic={setShowNewTopic}
+            handleTopicSelect={handleTopicSelect}
+            formatTimeAgo={formatTimeAgo}
+            isMobile={true}
+            onBack={handleBackToCategories}
+          />
+        )}
+
+        {mobileView === 'posts' && selectedTopic && (
+          <TopicPostsView 
+            selectedTopic={selectedTopic}
+            posts={posts}
+            loading={loading}
+            newPostContent={newPostContent}
+            setNewPostContent={setNewPostContent}
+            showEmojiPicker={showEmojiPicker}
+            setShowEmojiPicker={setShowEmojiPicker}
+            emojiPickerRef={emojiPickerRef}
+            createPost={createPost}
+            formatTimeAgo={formatTimeAgo}
+            isMobile={true}
+            onBack={handleBackToTopics}
+          />
+        )}
+      </div>
+
+      {/* Modals */}
+      {showNewCategory && (
+        <NewCategoryModal
+          newCategory={newCategory}
+          setNewCategory={setNewCategory}
+          setShowNewCategory={setShowNewCategory}
+          createCategory={createCategory}
+        />
+      )}
+
+      {showNewTopic && selectedCategory && (
+        <NewTopicModal
+          newTopic={newTopic}
+          setNewTopic={setNewTopic}
+          setShowNewTopic={setShowNewTopic}
+          createTopic={createTopic}
+          loading={loading}
+        />
       )}
     </div>
   );
 }
+
+// Sub-components for better organization
+const TopicsListView = ({
+  selectedCategory,
+  topics,
+  loading,
+  setShowNewTopic,
+  handleTopicSelect,
+  formatTimeAgo,
+  isMobile = false,
+  onBack
+}: {
+  selectedCategory: Category;
+  topics: Topic[];
+  loading: any;
+  setShowNewTopic: (show: boolean) => void;
+  handleTopicSelect: (topic: Topic) => void;
+  formatTimeAgo: (timestamp: string) => string;
+  isMobile?: boolean;
+  onBack?: () => void;
+}) => {
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      {isMobile && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center">
+          <button
+            onClick={onBack}
+            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              {selectedCategory.name}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {selectedCategory.description}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {!isMobile && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              {selectedCategory.name}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {selectedCategory.description}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowNewTopic(true)}
+            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center space-x-2"
+          >
+            <Plus size={16} />
+            <span>Nouveau sujet</span>
+          </button>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto">
+        {loading.topics ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+          </div>
+        ) : topics.length > 0 ? (
+          <div className="divide-y divide-gray-200 dark:divide-gray-800">
+            {topics.map((topic) => (
+              <div
+                key={topic.id}
+                onClick={() => handleTopicSelect(topic)}
+                className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white">
+                      {topic.title}
+                    </h3>
+                    <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <span>Par @{topic.author.username}</span>
+                      <span className="mx-2">•</span>
+                      <span>{formatTimeAgo(topic.created_at)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <MessageCircle size={14} className="mr-1" />
+                      <span>{topic.posts_count}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Eye size={14} className="mr-1" />
+                      <span>{topic.views_count}</span>
+                    </div>
+                  </div>
+                </div>
+                {topic.last_post && (
+                  <div className="mt-2 flex items-center text-xs text-gray-400">
+                    <span>Dernière réponse par @{topic.last_post.author.username}</span>
+                    <span className="mx-2">•</span>
+                    <span>{formatTimeAgo(topic.last_post.created_at)}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8">
+            <MessageCircle size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+              Aucun sujet trouvé
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              Soyez le premier à créer un sujet dans cette catégorie
+            </p>
+            <button
+              onClick={() => setShowNewTopic(true)}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center space-x-2"
+            >
+              <Plus size={16} />
+              <span>Créer un sujet</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isMobile && (
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <button
+            onClick={() => setShowNewTopic(true)}
+            className="w-full px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center justify-center space-x-2"
+          >
+            <Plus size={16} />
+            <span>Nouveau sujet</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TopicPostsView = ({
+  selectedTopic,
+  posts,
+  loading,
+  newPostContent,
+  setNewPostContent,
+  showEmojiPicker,
+  setShowEmojiPicker,
+  emojiPickerRef,
+  createPost,
+  formatTimeAgo,
+  isMobile = false,
+  onBack
+}: {
+  selectedTopic: Topic;
+  posts: Post[];
+  loading: any;
+  newPostContent: string;
+  setNewPostContent: (content: string) => void;
+  showEmojiPicker: boolean;
+  setShowEmojiPicker: (show: boolean) => void;
+  emojiPickerRef: React.RefObject<HTMLDivElement>;
+  createPost: () => void;
+  formatTimeAgo: (timestamp: string) => string;
+  isMobile?: boolean;
+  onBack?: () => void;
+}) => {
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      {isMobile && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center">
+          <button
+            onClick={onBack}
+            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              {selectedTopic.title}
+            </h1>
+            <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <span>Créé par @{selectedTopic.author.username}</span>
+              <span className="mx-2">•</span>
+              <span>{formatTimeAgo(selectedTopic.created_at)}</span>
+              <span className="mx-2">•</span>
+              <span>{selectedTopic.views_count} vues</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isMobile && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              {selectedTopic.title}
+            </h1>
+            <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <span>Créé par @{selectedTopic.author.username}</span>
+              <span className="mx-2">•</span>
+              <span>{formatTimeAgo(selectedTopic.created_at)}</span>
+              <span className="mx-2">•</span>
+              <span>{selectedTopic.views_count} vues</span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {selectedTopic.is_pinned && (
+              <span className="px-2 py-1 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full flex items-center">
+                <Pin size={12} className="mr-1" />
+                Épinglé
+              </span>
+            )}
+            {selectedTopic.is_locked && (
+              <span className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-full flex items-center">
+                <Lock size={12} className="mr-1" />
+                Verrouillé
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {loading.posts ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+          </div>
+        ) : posts.length > 0 ? (
+          posts.map((post) => (
+            <div key={post.id} className="flex space-x-4 group">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <User size={20} />
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {post.author.username}
+                    </span>
+                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                      {formatTimeAgo(post.created_at)}
+                    </span>
+                    {post.is_edited && (
+                      <span className="ml-2 text-xs text-gray-400">
+                        (modifié)
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <MessageCircle size={16} className="text-gray-500" />
+                    </button>
+                    <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <ThumbsUp size={16} className="text-gray-500" />
+                    </button>
+                    <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <MoreVertical size={16} className="text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-1 text-gray-700 dark:text-gray-300">
+                  {post.content}
+                </div>
+                <div className="mt-2 flex items-center space-x-4 text-sm">
+                  <button className="flex items-center text-gray-500 hover:text-emerald-500">
+                    <ThumbsUp size={14} className="mr-1" />
+                    <span>{post.likes_count} J'aime</span>
+                  </button>
+                  <button className="flex items-center text-gray-500 hover:text-emerald-500">
+                    <MessageCircle size={14} className="mr-1" />
+                    <span>Répondre</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 dark:text-gray-400">
+            <MessageCircle size={48} className="mb-4 opacity-20" />
+            <p>Aucun message dans ce sujet</p>
+            <p className="text-sm mt-2">Soyez le premier à participer à la discussion</p>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div className="relative">
+          <textarea
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            placeholder="Écrivez votre réponse..."
+            rows={3}
+            className="w-full px-4 py-3 pr-12 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+          />
+          <div className="absolute right-3 bottom-3 flex space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            >
+              <Smile size={20} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            >
+              <Paperclip size={20} />
+            </button>
+            <button
+              type="button"
+              onClick={createPost}
+              disabled={!newPostContent.trim() || loading.posting}
+              className="px-4 py-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading.posting ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mx-2"></div>
+              ) : (
+                'Publier'
+              )}
+            </button>
+          </div>
+          {showEmojiPicker && (
+            <div
+              ref={emojiPickerRef}
+              className="absolute bottom-14 right-0 z-10"
+            >
+              <EmojiPicker
+                onEmojiClick={(emojiData) => {
+                  setNewPostContent(newPostContent + emojiData.emoji);
+                }}
+                width={300}
+                height={350}
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EmptyForumView = ({ setShowNewCategory }: { setShowNewCategory: (show: boolean) => void }) => {
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+      <Hash size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        Bienvenue sur le forum
+      </h3>
+      <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">
+        Sélectionnez une catégorie pour voir les sujets de discussion ou créez-en une nouvelle pour commencer.
+      </p>
+      <button
+        onClick={() => setShowNewCategory(true)}
+        className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center space-x-2"
+      >
+        <Plus size={16} />
+        <span>Nouvelle catégorie</span>
+      </button>
+    </div>
+  );
+};
+
+const NewCategoryModal = ({
+  newCategory,
+  setNewCategory,
+  setShowNewCategory,
+  createCategory
+}: {
+  newCategory: { name: string; description: string };
+  setNewCategory: (category: { name: string; description: string }) => void;
+  setShowNewCategory: (show: boolean) => void;
+  createCategory: () => void;
+}) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold">Nouvelle catégorie</h3>
+          <button
+            onClick={() => {
+              setShowNewCategory(false);
+              setNewCategory({ name: '', description: '' });
+            }}
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Nom de la catégorie
+            </label>
+            <input
+              type="text"
+              value={newCategory.name}
+              onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="Ex: Questions générales"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Description
+            </label>
+            <textarea
+              value={newCategory.description}
+              onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="Décrivez le thème de cette catégorie"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 pt-2">
+            <button
+              onClick={() => {
+                setShowNewCategory(false);
+                setNewCategory({ name: '', description: '' });
+              }}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={createCategory}
+              disabled={!newCategory.name.trim()}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              Créer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const NewTopicModal = ({
+  newTopic,
+  setNewTopic,
+  setShowNewTopic,
+  createTopic,
+  loading
+}: {
+  newTopic: { title: string; content: string };
+  setNewTopic: (topic: { title: string; content: string }) => void;
+  setShowNewTopic: (show: boolean) => void;
+  createTopic: () => void;
+  loading: any;
+}) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold">Nouveau sujet</h3>
+          <button
+            onClick={() => {
+              setShowNewTopic(false);
+              setNewTopic({ title: '', content: '' });
+            }}
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Titre du sujet
+            </label>
+            <input
+              type="text"
+              value={newTopic.title}
+              onChange={(e) => setNewTopic({ ...newTopic, title: e.target.value })}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="Donnez un titre clair à votre sujet"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Votre message
+            </label>
+            <textarea
+              value={newTopic.content}
+              onChange={(e) => setNewTopic({ ...newTopic, content: e.target.value })}
+              rows={8}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="Développez votre question ou votre idée ici..."
+            />
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <Paperclip size={20} />
+              </button>
+              <button
+                type="button"
+                className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <Image size={20} />
+              </button>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowNewTopic(false);
+                  setNewTopic({ title: '', content: '' });
+                }}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={createTopic}
+                disabled={!newTopic.title.trim() || !newTopic.content.trim()}
+                className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                {loading.posting ? 'Publication...' : 'Publier le sujet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
