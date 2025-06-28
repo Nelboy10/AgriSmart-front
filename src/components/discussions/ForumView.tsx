@@ -262,8 +262,8 @@ export default function ForumView() {
             <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
           </button>
         )}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          {mobileView === 'categories' && 'Catégories'}
+        <h2 className="text-sm font-bold text-gray-900 dark:text-white">
+          {mobileView === 'categories' && 'Cliquez sur une catégorie'}
           {mobileView === 'topics' && selectedCategory?.name}
           {mobileView === 'posts' && selectedTopic?.title}
         </h2>

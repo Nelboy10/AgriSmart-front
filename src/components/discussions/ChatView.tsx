@@ -346,8 +346,8 @@ export default function ChatView() {
             <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
           </button>
         )}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          {mobileView === 'threads' ? 'Messages' : selectedThread?.thread_type === 'group' 
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+          {mobileView === 'threads' ? '' : selectedThread?.thread_type === 'group' 
             ? selectedThread.title 
             : selectedThread?.participants.find(p => p.username !== user?.username)?.username}
         </h2>
@@ -505,8 +505,7 @@ const ThreadsListView = ({
 }) => {
   return (
     <div className="w-full md:w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full bg-white dark:bg-gray-900">
-      {!isMobile && (
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 ">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Messages</h2>
             <button
@@ -527,7 +526,7 @@ const ThreadsListView = ({
             />
           </div>
         </div>
-      )}
+      
 
       <div className="flex-1 overflow-y-auto">
         {loading.threads && (
@@ -642,18 +641,6 @@ const ThreadsListView = ({
           </>
         )}
       </div>
-
-      {isMobile && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-          <button
-            onClick={() => setShowNewChat(true)}
-            className="w-full px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center justify-center gap-2"
-          >
-            <Plus size={16} />
-            <span>Nouvelle conversation</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 };
