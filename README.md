@@ -63,9 +63,9 @@ Tailwind CSS
 
 Axios
 
-Clerk ou Auth.js pour l’authentification (optionnel)
+Django pour l’authentification.
 
-MongoDB / Supabase / Firebase (selon la base choisie)
+Postgresql pour la base de donnés
 
 
 ### Déploiement
@@ -90,6 +90,7 @@ Tu peux :
 
 ### Auteurs
 Lafia Sabi Gado & Nel Gbaguidi
+
 Projet réalisé dans le cadre d’un mémoire universitaire 💼
 
 Développé par une équipe passionnée d’agriculture et de technologie 🚜💻
