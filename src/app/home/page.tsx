@@ -1,7 +1,8 @@
 'use client'
+import { useState, Suspense, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
-import { Sprout, Cloud, Users, Sun, Droplets, Wind } from 'lucide-react'
+import { Sprout, Cloud, Users, Sun, Droplets, Wind, Bot } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
 const WeatherWidget = dynamic(() => import('../weather/WeatherWidget'), {
@@ -24,8 +25,24 @@ const CommunityFeed = dynamic(() => import('@/components/CommunityFeed'), {
   )
 })
 
+const ChatBox = dynamic(() => import('@/components/ChatBox'), {
+  ssr: false,
+  loading: () => <div className="text-center p-4">Chargement de Lafia AI...</div>
+});
+
 export default function HomePage() {
   const { theme } = useTheme()
+  const [showChat, setShowChat] = useState(false)
+  const [isBotBlinking, setIsBotBlinking] = useState(false)
+
+  // Animation de clignement du robot
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setIsBotBlinking(true)
+      setTimeout(() => setIsBotBlinking(false), 200)
+    }, 5000)
+    return () => clearInterval(blinkInterval)
+  }, [])
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-green-50/20 to-blue-50/30 dark:from-slate-900 dark:via-emerald-900/10 dark:to-blue-900/10`}>
@@ -207,6 +224,28 @@ export default function HomePage() {
                   <Sprout className="w-24 h-24 text-white" />
                 </div>
               </motion.div>
+
+              {/* Bouton flottant du chat */}
+              <div className="fixed bottom-8 right-8 z-50 flex flex-col items-center">
+                <button
+                  onClick={() => setShowChat(!showChat)}
+                  className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3 rounded-full shadow-lg hover:scale-105 transition-transform duration-300"
+                  aria-label="Ouvrir le chat avec Lafia AI"
+                >
+                  <Bot
+                    size={36}
+                    className={`text-blue-500 transition-opacity duration-300 ${isBotBlinking ? 'opacity-40' : 'opacity-100'}`}
+                  />
+                </button>
+                <div className="mt-2 bg-blue-500 text-white text-xs px-3 py-1 rounded-full animate-pulse">
+                  Causer avec AgriBot
+                </div>
+              </div>
+
+              {/* Boîte de chat */}
+              <Suspense fallback={<div className="text-center p-4">Initialisation de AgriBot...</div>}>
+                {showChat && <ChatBox onClose={() => setShowChat(false)} />}
+              </Suspense>
             </motion.div>
           </div>
         </div>
