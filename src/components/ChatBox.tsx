@@ -81,7 +81,7 @@ export default function ChatBox({ onClose }: { onClose: () => void }) {
             <span className={`
               max-w-[80%] px-3 py-2 rounded-xl break-words
               ${msg.role === 'user' 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-green-600 text-white' 
                 : 'bg-gray-200 dark:bg-gray-700'}
             `}>
               {msg.content}
@@ -117,7 +117,7 @@ export default function ChatBox({ onClose }: { onClose: () => void }) {
         <button
           onClick={sendMessage}
           disabled={loading || !input.trim()}
-          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+          className="bg-green-600 text-white px-2 py-1 rounded text-sm hover:bg-green-700 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:opacity-50"
         >
           Envoyer
         </button>
