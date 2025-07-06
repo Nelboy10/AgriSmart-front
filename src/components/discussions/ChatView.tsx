@@ -347,9 +347,10 @@ export default function ChatView() {
           </button>
         )}
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-          {mobileView === 'threads' ? '' : selectedThread?.thread_type === 'group' 
+          {mobileView === 'threads' ? '' 
+            : selectedThread?.thread_type === 'group' 
             ? selectedThread.title 
-            : selectedThread?.participants.find(p => p.username !== user?.username)?.username}
+            : selectedThread?.participants?.find(p => p.username !== user?.username)?.username || 'Utilisateur' }
         </h2>
       </div>
 
