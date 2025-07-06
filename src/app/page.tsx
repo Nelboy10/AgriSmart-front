@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { JSX } from "react";
-
+import AgriBotButton from "@/components/AgriBotButton";
 
 import {
   FaUsers,
@@ -197,6 +197,7 @@ export default function AgriSmart() {
           </div>
         </div>
       </section>
+      <AgriBotButton />
     </div>
   );
 }
@@ -306,3 +307,6 @@ function FeatureCard({
     </div>
   );
 }
+
+
+
