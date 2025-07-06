@@ -696,8 +696,13 @@ const ChatDetailView = ({
   isMobile?: boolean;
   onBack?: () => void;
 }) => {
-  const otherUser = selectedThread.participants.find(p => p.username !== user?.username);
+  const otherUser = selectedThread?.participants?.find(p => p.username !== user?.username) || null;
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    console.log('Selected thread updated:', selectedThread);
+    console.log('Other user:', otherUser);
+  }, [selectedThread, otherUser]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -825,7 +830,7 @@ const ChatDetailView = ({
                 <div className={`flex gap-2 max-w-xs lg:max-w-md ${message.sender.username === user?.username ? 'flex-row-reverse' : ''}`}>
                   {message.message_type !== 'system' && (
                     <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 flex items-center justify-center text-sm">
-                      {message.sender.username.charAt(0)}
+                      {message.sender.username.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className={`rounded-2xl px-4 py-2 ${
@@ -1050,7 +1055,7 @@ const NewChatModal = ({
                     />
                   ) : (
                     <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white text-lg">
-                      {user.username.charAt(0)}
+                      {user.username.charAt(0).toUpperCase()}
                     </div>
                   )}
                   {user.is_online && (
