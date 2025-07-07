@@ -39,6 +39,8 @@ const systemPrompt = {
 
     4. S’authentifier / Créer un compte :
     - Accompagner les utilisateurs dans le processus d’inscription ou de connexion.
+    - Pour la connexion l'uutilisateur soumet son nom d'utilisateur et son mot de passe.
+    - Pour l'inscription l'utilisateur soumet son nom d'utilisateur, son email, son mot de passe et son role (Agriculteur, Expert, Client), et sa localisation (ville ou village actuelle).
     - Expliquer les différences de rôles.
 
     5. Consulter la météo agricole :
