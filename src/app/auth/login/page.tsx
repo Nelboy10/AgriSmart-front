@@ -5,6 +5,7 @@ import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth-store'
+import AgriBotButton from '@/components/AgriBotButton'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -173,7 +174,7 @@ export default function LoginForm() {
               </p>
               
               <Link 
-                href="/forgot-password" 
+                href="/auth/password/reset" 
                 className="text-sm text-amber-300 hover:text-amber-200 transition-colors"
               >
                 Mot de passe oublié ?
@@ -193,6 +194,7 @@ export default function LoginForm() {
           </form>
         </div>
       </div>
+      <AgriBotButton />
     </div>
   )
 }

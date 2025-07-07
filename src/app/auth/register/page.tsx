@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Mail, User, Lock, Eye, EyeOff, Sprout, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import AgriBotButton from '@/components/AgriBotButton'
 
 export default function RegisterForm() {
   const router = useRouter()
@@ -251,6 +252,7 @@ export default function RegisterForm() {
           )}
         </div>
       </div>
+      <AgriBotButton />
     </div>
   )
 }
